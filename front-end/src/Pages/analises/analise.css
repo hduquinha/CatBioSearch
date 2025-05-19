@@ -33,21 +33,30 @@
   color: #2c3e50;
 }
 
+
+/* analise.css */
+
+/* Informações do Gato */
 .cat-info-body {
   padding: 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Duas colunas com largura igual */
+  column-gap: 5px; /* Reduz o espaçamento horizontal entre as colunas */
+  row-gap: 10px; /* Mantém o espaçamento vertical como ajustado anteriormente */
+  justify-items: center; /* Centraliza os itens horizontalmente dentro de cada célula */
 }
 
 .cat-info-body p {
   font-size: 16px;
-  margin: 10px 0;
+  margin: 5px 0; /* Margem vertical ajustada anteriormente */
   color: #34495e;
+  text-align: center; /* Centraliza o texto dentro do elemento p */
 }
 
 .cat-info-body p strong {
   font-weight: bold;
   color: #2c3e50;
 }
-
 /* Resumo */
 .analysis-summary {
   display: flex;

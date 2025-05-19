@@ -68,10 +68,19 @@ const Analises = () => {
             <strong>Idade:</strong> {relatorio?.Idade || "Não informado"}
           </p>
           <p>
+            <strong>Cliente:</strong> {relatorio?.Cliente || "Não informado"}
+          </p>
+          <p>
             <strong>Sexo:</strong> {relatorio?.Sexo || "Não informado"}
           </p>
           <p>
             <strong>Raça:</strong> {relatorio?.Raca || "Não informado"}
+          </p>
+          <p>
+            <strong>Material:</strong> {relatorio?.Material || "Não informado"}
+          </p>
+          <p>
+            <strong>Metodo:</strong> {relatorio?.Metodo || "Não informado"}
           </p>
           <p>
             <strong>ID do Relatório:</strong> {relatorio?.id || "Não informado"}
