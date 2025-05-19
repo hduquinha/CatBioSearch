@@ -1,147 +1,156 @@
 // src/pages/AnalysisPage.js
 import React, { useEffect, useState } from "react";
-import "./analise.css"; // Importa o CSS para estilização
+import "./analise.css";
 import Sidebar from "../../Components/Sidebar";
 import RNASequence from "./Componentes/RNASequence";
 import NeedlemanWunsch from "./Componentes/Needlman";
 import Proteins from "./Componentes/Protein";
 import Dispersao from "./Componentes/Dispersao";
-import axios from "../../api"; // Certifique-se que axios está configurado corretamente
+import api, { fasta } from "../../api";
 import { jsPDF } from "jspdf";
 
 const Relatorio = () => {
+  const [relatorio, setRelatorio] = useState(null);
+  const [dadosAnalise, setDadosAnalise] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
+  // Mapeamento de classificação numérica para texto
+  const mapaClassificacao = {
+    0: "Risco Baixo",
+    1: "Risco Alto"
 
-  const downloadPDF = () => {
-    const doc = new jsPDF();
-    doc.text("Relatório do Animal - Félix", 10, 10);
-    doc.text("ID do Relatório: 123456", 10, 20);
-    doc.save("relatorio.pdf");
   };
 
-  const handleEmailSent = () => {
-    alert("E-mail enviado com sucesso!");
-  };
-  
-  const [relatorio, setRelatorio] = useState(null); // Estado para armazenar o relatório
-  const [loading, setLoading] = useState(true); // Estado de carregamento
-  const [error, setError] = useState(""); // Estado de erro
-
-  // Função para buscar o último relatório da API
   useEffect(() => {
-    const fetchUltimoRelatorio = async () => {
+    const fetchData = async () => {
       try {
-        setLoading(true); // Ativa o carregamento antes de buscar os dados
-        const response = await axios.get("relatorios/ultimo"); // Rota para buscar o último relatório
-        console.log("Último relatório recebido do backend:", response.data);
-        setRelatorio(response.data); // Atualiza o estado com os dados do relatório
+        setLoading(true);
+        
+        // Busca dados do relatório do animal
+        const relatorioResponse = await api.get("relatorios/ultimo");
+        setRelatorio(relatorioResponse.data);
+        
+        // Busca dados da análise genética
+        const analiseResponse = await fasta.get("dados-analise");
+        setDadosAnalise(analiseResponse.data);
+        
       } catch (err) {
-        console.error("Erro ao carregar o último relatório:", err);
-        setError("Não foi possível carregar o último relatório.");
+        console.error("Erro ao carregar dados:", err);
+        setError("Erro ao carregar dados do relatório");
       } finally {
-        setLoading(false); // Sempre desativa o carregamento
+        setLoading(false);
       }
     };
 
-    fetchUltimoRelatorio();
+    fetchData();
   }, []);
 
-  if (loading) return <p>Carregando...</p>;
-  if (error) return <p>{error}</p>;
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+    
+    // Configurações do PDF
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+    
+    // Cabeçalho
+    doc.setFontSize(16);
+    doc.text("Relatório Genético Completo", 10, 20);
+    doc.setFontSize(12);
+    
+    // Informações do Animal
+    doc.text(`Nome: ${relatorio?.Nome || "Não informado"}`, 10, 35);
+    doc.text(`ID do Relatório: ${relatorio?.id || "N/A"}`, 10, 45);
+    
+    // Dados da Análise
+    doc.setFontSize(14);
+    doc.text("Resultados da Análise Genética:", 10, 60);
+    doc.setFontSize(12);
+    
+    doc.text(`Classificação: ${mapaClassificacao[dadosAnalise?.classificacao] || "N/A"}`, 10, 70);
+    doc.text(`Confiança: ${dadosAnalise?.confianca || "N/A"}`, 10, 80);
+    doc.text(`Identidade Genética: ${dadosAnalise?.identidade || "N/A"}`, 10, 90);
+    doc.text(`Score de Alinhamento: ${dadosAnalise?.score?.toLocaleString() || "N/A"}`, 10, 100);
+    
+    doc.save("relatorio-genetico.pdf");
+  };
+
+  if (loading) return <div className="loading">Carregando dados...</div>;
+  if (error) return <div className="error">{error}</div>;
 
   return (
     <div className="analysis-page">
       <Sidebar />
 
-       {/* Informações do Gato */}
+      {/* Informações do Animal */}
       <div className="cat-info">
         <div className="cat-info-header">
           <h2>Relatório do Animal</h2>
         </div>
         <div className="cat-info-body">
-          <p>
-            <strong>Nome:</strong> {relatorio?.Nome || "Não informado"}
-          </p>
-          <p>
-            <strong>Idade:</strong> {relatorio?.Idade || "Não informado"}
-          </p>
-          <p>
-            <strong>Cliente:</strong> {relatorio?.Cliente || "Não informado"}
-          </p>
-          <p>
-            <strong>Sexo:</strong> {relatorio?.Sexo || "Não informado"}
-          </p>
-          <p>
-            <strong>Raça:</strong> {relatorio?.Raca || "Não informado"}
-          </p>
-          <p>
-            <strong>Material:</strong> {relatorio?.Material || "Não informado"}
-          </p>
-          <p>
-            <strong>Metodo:</strong> {relatorio?.Metodo || "Não informado"}
-          </p>
-          <p>
-            <strong>ID do Relatório:</strong> {relatorio?.id || "Não informado"}
-          </p>
+          <p><strong>Nome:</strong> {relatorio?.Nome || "Não informado"}</p>
+          <p><strong>Idade:</strong> {relatorio?.Idade || "Não informado"}</p>
+          <p><strong>Cliente:</strong> {relatorio?.Cliente || "Não informado"}</p>
+          <p><strong>Sexo:</strong> {relatorio?.Sexo || "Não informado"}</p>
+          <p><strong>Raça:</strong> {relatorio?.Raca || "Não informado"}</p>
+          <p><strong>ID do Relatório:</strong> {relatorio?.id || "N/A"}</p>
         </div>
       </div>
 
-      {/* Resumo */}
+      {/* Resumo da Análise */}
       <div className="analysis-summary">
         <div className="summary-item">
-          <h3>Classificação de Risco</h3>
-          <div className="risk-indicator">Alta</div>
+          <h3>Classificação</h3>
+          <div className={`risk-indicator ${dadosAnalise?.classificacao}`}>
+            {mapaClassificacao[dadosAnalise?.classificacao] || "N/A"}
+          </div>
         </div>
         <div className="summary-item">
-          <h3>Mutações encontradas</h3>
-          <div className="summary-value">3</div>
+          <h3>Confiança</h3>
+          <div className="summary-value confidence">
+            {dadosAnalise?.confianca || "N/A"}
+          </div>
         </div>
         <div className="summary-item">
-          <h3>Similaridade</h3>
-          <div className="summary-value">82,96%</div>
+          <h3>Identidade Genética</h3>
+          <div className="summary-value identity">
+            {dadosAnalise?.identidade || "N/A"}
+          </div>
         </div>
       </div>
 
-      {/* Porcentagem de Doença Renal Policística */}
-      <div className="drp-section">
-        <h3>Doença Renal Policística</h3>
-        <div className="drp-percentage">87.03%</div>
-      </div>
-
-      {/* Identidade dos Genes */}
-      <div className="gene-identity">
-        <h3>Score</h3>
-        <p>
-          A pontuação obtida no sequenciamento genético foi de:{" "}
-          <strong>465.5</strong>.
-        </p>
-      </div>
-
-      {/* Seção Needleman Wunsch */}
-      <div className="needleman-section">
-        <NeedlemanWunsch />
-      </div>
-
-      {/* Seção RNA e Dispersão */}
-      <div className="analysis-data">
-        <div className="transcription-section">
-          <RNASequence />
-        </div>
-        <div className="protein-section">
-          <Proteins />
+      {/* Detalhes Técnicos */}
+      <div className="technical-details">
+        <div className="detail-item">
+          <h3>Score de Alinhamento</h3>
+          <div className="detail-value">
+            {dadosAnalise?.score?.toLocaleString() || "N/A"}
+          </div>
         </div>
       </div>
 
-      {/* Dispersão da Amostra */}
-      <div className="scatter-plot">
-        <Dispersao />
+      {/* Seções de Visualização de Dados */}
+      <div className="data-visualization">
+        <div className="needleman-section">
+          <NeedlemanWunsch />
+        </div>
+        <div className="analysis-data">
+          <div className="transcription-section">
+            <RNASequence />
+          </div>
+          <div className="protein-section">
+            <Proteins />
+          </div>
+        </div>
+        <div className="scatter-plot">
+          <Dispersao />
+        </div>
       </div>
+
+      {/* Botões de Ação */}
       <div className="action-buttons">
         <button className="button-download" onClick={downloadPDF}>
           Baixar PDF
-        </button>
-        <button className="button-email" onClick={handleEmailSent}>
-          Enviar E-mail
         </button>
       </div>
     </div>

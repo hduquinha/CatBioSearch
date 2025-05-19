@@ -5,7 +5,14 @@ import sys
 import requests
 
 app = Flask(__name__)
-CORS(app)
+CORS(
+    app,
+    supports_credentials=True,
+    resources={r"/*": {"origins": "http://localhost:5173"}}
+)
+
+# Variável global para armazenar o último resultado da análise
+ultimo_resultado_analise = {}
 
 def print_progress(progress, message=None):
     bar_length = 40
@@ -18,6 +25,8 @@ def print_progress(progress, message=None):
 
 @app.route('/buscar-pkd1', methods=['POST'])
 def buscar_pkd1():
+    global ultimo_resultado_analise
+
     if 'arquivo' not in request.files:
         return jsonify({"error": "Nenhum arquivo foi enviado"}), 400
 
@@ -45,15 +54,16 @@ def buscar_pkd1():
     print("\n🧬 Sequência extraída do exon29:")
     print(alinhamento_result['exon29_amostra'])
 
-
     if 'score' in alinhamento_result:
         print(f"\n📏 Similaridade do alinhamento: {alinhamento_result['score']:.2f}%")
 
     # Envia o exon29 para a IA
     outra_api_url = "http://localhost:6000/classificar-exon29"
     try:
-        response = requests.post(outra_api_url, json={"alinhamento_result": {"exon29_amostra": alinhamento_result['exon29_amostra']}}
-)
+        response = requests.post(
+            outra_api_url,
+            json={"alinhamento_result": {"exon29_amostra": alinhamento_result['exon29_amostra']}}
+        )
         if response.status_code != 200:
             print(f"\n❌ Erro ao enviar para a IA: {response.status_code} - {response.text}")
         else:
@@ -62,10 +72,25 @@ def buscar_pkd1():
             print(f"📌 Classificação: {resultado_ia['classificacao']}")
             print(f"📊 Confiança: {resultado_ia['confianca']}")
             gene_info["classificacao_ia"] = resultado_ia
+
+            # Salva as informações importantes para a nova rota
+            ultimo_resultado_analise = {
+                "classificacao": resultado_ia.get("classificacao"),
+                "confianca": resultado_ia.get("confianca"),
+                "identidade": alinhamento_result["melhor_alinhamento"].get("identidade"),
+                "score": alinhamento_result["melhor_alinhamento"].get("score")
+            }
+
     except Exception as e:
         print(f"\n❌ Erro ao conectar com a IA: {e}")
 
     return jsonify(gene_info)
+
+@app.route('/dados-analise', methods=['GET'])
+def dados_analise():
+    if not ultimo_resultado_analise:
+        return jsonify({"error": "Nenhuma análise foi realizada ainda"}), 404
+    return jsonify(ultimo_resultado_analise)
 
 if __name__ == '__main__':
     print("🧬 Servidor de Análise Genética rodando em http://localhost:5000/buscar-pkd1")
