@@ -14,20 +14,19 @@ const Cadastro = () => {
         telefoneClinica: "",
         emailClinica: "",
         enderecoClinica: "",
-        clienteCadastrado: "Não", // Valor padrão para "Não"
+        clienteCadastrado: "Não",
         materialGenetico: "",
         sequenciamento: "",
         arquivo: null,
     });
 
-    const [veterinarios, setVeterinarios] = useState([]); // Estado para armazenar os veterinários
+    const [veterinarios, setVeterinarios] = useState([]);
     const navigate = useNavigate();
 
-    // Busca os veterinários do backend ao carregar o componente
     useEffect(() => {
         const fetchVeterinarios = async () => {
             try {
-                const response = await api.get("/vet/veterinarios"); // Faz a requisição para a rota que retorna os veterinários
+                const response = await api.get("/vet/veterinarios");
                 setVeterinarios(response.data.veterinarios || []);
             } catch (err) {
                 console.error("Erro ao buscar veterinários:", err);
@@ -66,7 +65,7 @@ const Cadastro = () => {
         const relatorioData = {
             Nome: formData.nomeGato,
             Sexo: formData.sexoGato,
-            Cliente: formData.clienteCadastrado, // Aqui usamos o valor selecionado na dropdown
+            Cliente: formData.clienteCadastrado,
             Idade: formData.idadeGato,
             Raca: formData.racaGato,
             Material: formData.materialGenetico,
@@ -74,9 +73,22 @@ const Cadastro = () => {
         };
 
         try {
+            // Envia os dados principais para sua API
             const response = await api.post("/relatorios/novo-relatorio", relatorioData);
-            alert(response.data.message); // Exibe uma mensagem de sucesso
-            navigate("/loading"); // Redireciona após o cadastro
+            alert(response.data.message);
+
+            // Se tiver um arquivo, envia para a outra API
+            if (formData.arquivo) {
+                const fileForm = new FormData();
+                fileForm.append("arquivo", formData.arquivo);
+
+                await fetch("http://localhost:5000/buscar-pkd1", {
+                    method: "POST",
+                    body: fileForm,
+                });
+            }
+
+            navigate("/loading");
         } catch (err) {
             console.error("Erro ao cadastrar o relatório:", err);
             alert("Ocorreu um erro ao cadastrar o relatório.");
@@ -85,7 +97,6 @@ const Cadastro = () => {
 
     return (
         <div className="cadastro-container">
-            {/* Barra de progresso */}
             <div className="progress-bar">
                 {["Passo 1", "Passo 2", "Passo 3"].map((step, index) => (
                     <div
@@ -104,7 +115,6 @@ const Cadastro = () => {
             </div>
 
             <form className="form-container" onSubmit={(e) => e.preventDefault()}>
-                {/* Passo 1: Informações básicas do gato */}
                 {currentStep === 1 && (
                     <div className="form-step">
                         <h2>Informações Básicas do Gato</h2>
@@ -161,7 +171,6 @@ const Cadastro = () => {
                     </div>
                 )}
 
-                {/* Passo 2: Informações da clínica veterinária */}
                 {currentStep === 2 && (
                     <div className="form-step">
                         <h2>Informações da Clínica Veterinária</h2>
@@ -173,7 +182,7 @@ const Cadastro = () => {
                                     name="nomeClinica"
                                     value={formData.nomeClinica}
                                     onChange={handleChange}
-                                    disabled={formData.clienteCadastrado !== "Não"} // Desabilitar se não for "Não"
+                                    disabled={formData.clienteCadastrado !== "Não"}
                                 />
                             </label>
                             <label>
@@ -183,7 +192,7 @@ const Cadastro = () => {
                                     name="telefoneClinica"
                                     value={formData.telefoneClinica}
                                     onChange={handleChange}
-                                    disabled={formData.clienteCadastrado !== "Não"} // Desabilitar se não for "Não"
+                                    disabled={formData.clienteCadastrado !== "Não"}
                                 />
                             </label>
                         </div>
@@ -195,7 +204,7 @@ const Cadastro = () => {
                                     name="emailClinica"
                                     value={formData.emailClinica}
                                     onChange={handleChange}
-                                    disabled={formData.clienteCadastrado !== "Não"} // Desabilitar se não for "Não"
+                                    disabled={formData.clienteCadastrado !== "Não"}
                                 />
                             </label>
                             <label>
@@ -205,7 +214,7 @@ const Cadastro = () => {
                                     name="enderecoClinica"
                                     value={formData.enderecoClinica}
                                     onChange={handleChange}
-                                    disabled={formData.clienteCadastrado !== "Não"} // Desabilitar se não for "Não"
+                                    disabled={formData.clienteCadastrado !== "Não"}
                                 />
                             </label>
                         </div>
@@ -227,7 +236,6 @@ const Cadastro = () => {
                     </div>
                 )}
 
-                {/* Passo 3: Sobre a análise */}
                 {currentStep === 3 && (
                     <div className="form-step">
                         <h2>Sobre a Análise</h2>
@@ -261,7 +269,6 @@ const Cadastro = () => {
                     </div>
                 )}
 
-                {/* Botões de navegação */}
                 <div className="nav-buttons">
                     {currentStep > 1 && (
                         <button type="button" onClick={prevStep} className="nav-button">

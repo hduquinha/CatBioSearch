@@ -29,10 +29,6 @@ if not os.path.exists("front-end/node_modules"):
 else:
     print("Dependências do React já instaladas. Pulando instalação.")
 
-print("Iniciando o back-end Python...")
-python_executable = os.path.abspath("back-end-fasta/venv/Scripts/python.exe")
-app_script = os.path.abspath("back-end-fasta/app.py")
-python_process = run_command(f'"{python_executable}" "{app_script}"')
 
 print("Iniciando o back-end Node.js...")
 node_process = run_command("npm start", cwd="back-end")
@@ -40,6 +36,6 @@ node_process = run_command("npm start", cwd="back-end")
 print("Iniciando o front-end React...")
 react_process = run_command("npm run dev", cwd="front-end")
 
-python_process.wait()
+
 node_process.wait()
 react_process.wait()

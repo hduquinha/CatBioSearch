@@ -211,6 +211,15 @@
   background-color: #ffc10752; /* Fundo claro para destacar */
 }
 
+.actions-menu button.visualizar {
+  color: #48af33; /* Vermelho para deletar */
+  font-weight: bold;
+}
+
+.actions-menu button.visualizar:hover {
+  background-color: #b8e7b8; /* Fundo claro para destacar */
+}
+
 /* Linha de destaque */
 .cats-table tr {
   border-radius: 10px;

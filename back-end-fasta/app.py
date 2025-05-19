@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from services import buscar_gene_pkd1, realizar_alinhamento_grande
 import sys
+import requests  # Biblioteca para fazer requisições HTTP
 
 app = Flask(__name__)
 CORS(app)
@@ -40,6 +41,18 @@ def buscar_pkd1():
     
     gene_info['alinhamento_result'] = alinhamento_result
     print("\nProcesso concluído!")
+
+    # Enviando o resultado para outra API
+    outra_api_url = "http://localhost:6000/classificar-exon29"  # Altere conforme sua outra API
+    try:
+        resposta = requests.post(outra_api_url, json=gene_info)
+        if resposta.status_code != 200:
+            print(f"Erro ao enviar para outra API: {resposta.status_code} - {resposta.text}")
+        else:
+            print("Resposta enviada com sucesso para outra API.")
+    except Exception as e:
+        print(f"Erro ao conectar com a outra API: {e}")
+
     return jsonify(gene_info)
 
 if __name__ == '__main__':

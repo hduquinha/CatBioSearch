@@ -78,7 +78,7 @@ router.get('/relatorio/:id', autenticacao, async (req, res) => {
 
     try {
         const relatorio = await Relatorio.findByPk(id, {
-            attributes: ['id', 'Nome', 'Sexo', 'Cliente', 'Idade', 'Pelagem', 'Material', 'Metodo']
+            attributes: ['id', 'Nome', 'Sexo', 'Cliente', 'Idade', "Raca"]
         });
 
         if (!relatorio) {
@@ -95,7 +95,7 @@ router.get('/relatorio/:id', autenticacao, async (req, res) => {
 // Rota para atualizar um relatório
 router.put('/relatorio/:id', autenticacao, async (req, res) => {
     const { id } = req.params;
-    const { Nome, Sexo, Cliente, Idade, Pelagem, Material, Metodo } = req.body;
+    const { Nome, Sexo, Cliente, Idade } = req.body;
 
     try {
         const relatorio = await Relatorio.findByPk(id);
@@ -108,10 +108,8 @@ router.put('/relatorio/:id', autenticacao, async (req, res) => {
             Nome,
             Sexo,
             Cliente,
-            Idade,
-            Pelagem,
-            Material,
-            Metodo,
+            Idade
+    
         });
 
         res.json({ message: "Relatório atualizado com sucesso.", relatorio });
@@ -158,6 +156,27 @@ router.get('/ultimo', autenticacao, async (req, res) => {
         res.status(500).send('Ocorreu um erro ao buscar o último relatório.');
     }
 });
+
+
+router.get('/relatorio/analise/:id', autenticacao, async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const relatorio = await Relatorio.findByPk(id, {
+            attributes: ['id', 'Nome', 'Sexo', 'Cliente', 'Idade', 'Raca', 'Material', 'Metodo']
+        });
+
+        if (!relatorio) {
+            return res.status(404).json({ message: "Relatório não encontrado." });
+        }
+
+        res.json(relatorio);
+    } catch (err) {
+        console.error(`Erro ao buscar relatório: ${err}`);
+        res.status(500).send('Ocorreu um erro ao buscar o relatório.');
+    }
+});
+
 
 
 

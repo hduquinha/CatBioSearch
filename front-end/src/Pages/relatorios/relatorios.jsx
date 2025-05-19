@@ -119,9 +119,15 @@ const HistoricoRelatorios = () => {
                           <div className="actions-menu">
                             <button
                               className="edit"
-                              onClick={() => navigate(`/editar/${gato.id}`)}
+                              onClick={() => navigate(`/alterarrelatorio/${gato.id}`)}
                             >
                               Alterar
+                            </button>
+                             <button
+                              className="visualizar"
+                              onClick={() => navigate(`/relatorio/analise/${gato.id}`)}
+                            >
+                              Visualizar
                             </button>
                             <button
                               className="delete"

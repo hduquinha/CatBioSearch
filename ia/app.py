@@ -15,10 +15,18 @@ modelo = joblib.load(modelo_path)
 @app.route("/classificar-exon29", methods=["POST"])
 def classificar():
     data = request.get_json()
-    if not data or 'exon29' not in data:
-        return jsonify({"error": "JSON inválido. Esperado: {'exon29': 'SEQUENCIA'}"}), 400
 
-    sequencia = data['exon29']
+    if not data:
+        return jsonify({"error": "Nenhum dado JSON fornecido."}), 400
+
+    # Verifica se 'exon29' ou 'sequencia' está presente
+    if 'exon29' in data:
+        sequencia = data['exon29']
+    elif 'sequencia' in data:
+        sequencia = data['sequencia']
+    else:
+        return jsonify({"error": "JSON inválido. Esperado: {'exon29': 'SEQUENCIA'} ou {'sequencia': 'SEQUENCIA'}"}), 400
+
     try:
         features = extrair_features(sequencia)
         pred = modelo.predict([list(features.values())])[0]
@@ -33,4 +41,4 @@ def classificar():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=6000, debug=True)

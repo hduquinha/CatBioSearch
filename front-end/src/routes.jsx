@@ -11,8 +11,10 @@ import CriarCliente from './Pages/criarCliente/index';
 import CriarUsuario from './Pages/criarUsuario/index';
 import AlterarCliente from './Pages/alterarCliente/index';
 import AlterarUsuario from './Pages/alterarUsuario/index';
+import AlterarRelatorio from './Pages/alterarRelatorio/index';
 import LoadingPage from './Pages/carregamento/index';
 import Relatorio from './Pages/relatorio/analise';
+import Analises from './Pages/analises/analise'
 
 
 const AppRoutes = () => (
@@ -34,6 +36,8 @@ const AppRoutes = () => (
       <Route path="/alterarusuario/:id" element={<AlterarUsuario />} />
       <Route path="/loading" element={<LoadingPage />} />
       <Route path="/relatorios" element={<Relatorio />} />
+      <Route path="/alterarrelatorio/:id" element={<AlterarRelatorio />} />
+      <Route path="/relatorio/analise/:id" element={<Analises />} />
       </Routes>
   </Router>
 );
