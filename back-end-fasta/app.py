@@ -2,13 +2,12 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from services import buscar_gene_pkd1, realizar_alinhamento_grande
 import sys
-import requests  # Biblioteca para fazer requisições HTTP
+import requests
 
 app = Flask(__name__)
 CORS(app)
 
 def print_progress(progress, message=None):
-    """Exibe progresso no terminal"""
     bar_length = 40
     block = int(round(bar_length * progress))
     text = f"\r[{'#' * block}{'-' * (bar_length - block)}] {progress:.1%}"
@@ -28,34 +27,46 @@ def buscar_pkd1():
     def update_progress(progress, message):
         print_progress(progress, message)
 
-    print("Processando arquivo...")
+    print("📁 Processando arquivo...")
     gene_info = buscar_gene_pkd1(conteudo)
     if 'error' in gene_info:
         return jsonify(gene_info)
 
-    print("\nExecutando alinhamento...")
+    print("\n🔬 Executando alinhamento...")
     alinhamento_result = realizar_alinhamento_grande(
         gene_info['sequencia'],
         progress_callback=update_progress
     )
-    
-    gene_info['alinhamento_result'] = alinhamento_result
-    print("\nProcesso concluído!")
 
-    # Enviando o resultado para outra API
-    outra_api_url = "http://localhost:6000/classificar-exon29"  # Altere conforme sua outra API
+    gene_info['alinhamento_result'] = alinhamento_result
+    print("\n✅ Processo concluído!")
+
+    # Exibe no terminal: exon29 e similaridade
+    print("\n🧬 Sequência extraída do exon29:")
+    print(alinhamento_result['exon29_amostra'])
+
+
+    if 'score' in alinhamento_result:
+        print(f"\n📏 Similaridade do alinhamento: {alinhamento_result['score']:.2f}%")
+
+    # Envia o exon29 para a IA
+    outra_api_url = "http://localhost:6000/classificar-exon29"
     try:
-        resposta = requests.post(outra_api_url, json=gene_info)
-        if resposta.status_code != 200:
-            print(f"Erro ao enviar para outra API: {resposta.status_code} - {resposta.text}")
+        response = requests.post(outra_api_url, json={"alinhamento_result": {"exon29_amostra": alinhamento_result['exon29_amostra']}}
+)
+        if response.status_code != 200:
+            print(f"\n❌ Erro ao enviar para a IA: {response.status_code} - {response.text}")
         else:
-            print("Resposta enviada com sucesso para outra API.")
+            resultado_ia = response.json()
+            print("\n🤖 Resposta da IA:")
+            print(f"📌 Classificação: {resultado_ia['classificacao']}")
+            print(f"📊 Confiança: {resultado_ia['confianca']}")
+            gene_info["classificacao_ia"] = resultado_ia
     except Exception as e:
-        print(f"Erro ao conectar com a outra API: {e}")
+        print(f"\n❌ Erro ao conectar com a IA: {e}")
 
     return jsonify(gene_info)
 
 if __name__ == '__main__':
-    print("Servidor de Análise Genética")
-    print("Endpoint: POST /buscar-pkd1")
+    print("🧬 Servidor de Análise Genética rodando em http://localhost:5000/buscar-pkd1")
     app.run(host='0.0.0.0', port=5000, debug=True)

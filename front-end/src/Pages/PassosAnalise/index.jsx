@@ -60,22 +60,27 @@ const Cadastro = () => {
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
+    e.preventDefault();
 
-        const relatorioData = {
-            Nome: formData.nomeGato,
-            Sexo: formData.sexoGato,
-            Cliente: formData.clienteCadastrado,
-            Idade: formData.idadeGato,
-            Raca: formData.racaGato,
-            Material: formData.materialGenetico,
-            Metodo: formData.sequenciamento,
-        };
+    const relatorioData = {
+        Nome: formData.nomeGato,
+        Sexo: formData.sexoGato,
+        Cliente: formData.clienteCadastrado,
+        Idade: formData.idadeGato,
+        Raca: formData.racaGato,
+        Material: formData.materialGenetico,
+        Metodo: formData.sequenciamento,
+    };
 
+    // Redireciona imediatamente para a tela de carregamento
+    navigate("/loading");
+
+    // Aguarda o redirecionamento completar antes de continuar com o processamento
+    setTimeout(async () => {
         try {
             // Envia os dados principais para sua API
             const response = await api.post("/relatorios/novo-relatorio", relatorioData);
-            alert(response.data.message);
+            console.log(response.data.message);
 
             // Se tiver um arquivo, envia para a outra API
             if (formData.arquivo) {
@@ -88,12 +93,15 @@ const Cadastro = () => {
                 });
             }
 
-            navigate("/loading");
+            // Aqui você pode opcionalmente atualizar algo no backend ou estado global
+
         } catch (err) {
             console.error("Erro ao cadastrar o relatório:", err);
-            alert("Ocorreu um erro ao cadastrar o relatório.");
+            // Você pode salvar o erro em um contexto ou exibir na tela de loading se quiser
         }
-    };
+    }, 100); // Pequeno delay para garantir que o navigate seja processado
+};
+
 
     return (
         <div className="cadastro-container">

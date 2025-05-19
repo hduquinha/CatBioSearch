@@ -29,13 +29,13 @@ const LoadingPage = () => {
                 }
                 return prevProgress + 1;
               });
-            }, 150); // Retorna a atualização a cada 150ms
+            }, 1500); // Retorna a atualização a cada 150ms
           }, 3000); // Pausa de 2 segundos
         }
 
         return newProgress;
       });
-    }, 150); // A cada 150ms a barra aumenta 1%
+    }, 1500); // A cada 150ms a barra aumenta 1%
 
     return () => clearInterval(progressInterval); // Limpar o intervalo quando o componente for desmontado
   }, []);
