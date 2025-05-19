@@ -1,0 +1,54 @@
+services:
+  front-end:
+    build: ./front-end
+    ports:
+      - "5173:5173"
+    networks:
+      - catbio-network
+
+  back-end:
+    build: ./back-end
+    ports:
+      - "4000:4000"
+    networks:
+      - catbio-network
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db  
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: catsearch
+    links:
+      - db  
+
+  back-end-fasta:
+    build: ./back-end-fasta
+    ports:
+      - "5000:5000"
+    networks:
+      - catbio-network
+
+  ia:
+    build: ./ia
+    ports:
+      - "6000:6000"
+    networks:
+      - catbio-network
+
+  db:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: catsearch
+    networks:
+      - catbio-network
+    volumes:
+      - dbdata:/var/lib/mysql
+
+networks:
+  catbio-network:
+    driver: bridge
+
+volumes:
+  dbdata:
