@@ -1,4 +1,11 @@
 services:
+  front-end:
+    build: ./front-end
+    ports:
+      - "5173:5173"
+    networks:
+      - catbio-network
+
   back-end:
     build: ./back-end
     ports:
@@ -13,6 +20,13 @@ services:
       DB_USER: root
       DB_PASSWORD: root
       DB_NAME: catsearch
+
+  back-end-fasta:
+    build: ./back-end-fasta
+    ports:
+      - "5000:5000"
+    networks:
+      - catbio-network  
 
   ia:
     build: ./ia
