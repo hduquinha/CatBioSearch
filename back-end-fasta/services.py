@@ -43,21 +43,34 @@ def buscar_gene_pkd1(conteudo):
         return {"error": f"Erro ao buscar gene: {str(e)}"}
 
 def criar_matriz_dna():
-    """Cria matriz de substituição para DNA"""
-    matriz = substitution_matrices.Array('ACGT', dims=2)
-    for i, a in enumerate('ACGT'):
-        for j, b in enumerate('ACGT'):
-            matriz[i, j] = 5 if a == b else -4
-    return matriz
+    """Obtém uma matriz de substituição padrão para DNA.
 
-def calcular_identidade(alinhamento):
-    """Calcula porcentagem de identidade"""
-    matches = length = 0
-    for ref, query in zip(alinhamento.target, alinhamento.query):
-        if ref != '-' and query != '-':
-            length += 1
-            if ref == query:
+    Observação: Evita APIs antigas/obsoletas criando a matriz via
+    substitution_matrices.load("NUC.4.4").
+    """
+    try:
+        return substitution_matrices.load("NUC.4.4")
+    except Exception:
+        # Fallback simples caso o load falhe no ambiente: usa escore match/mismatch
+        # diretamente configurado no PairwiseAligner via match/mismatch_score
+        return None
+
+def calcular_identidade_por_blocos(alinhamento, referencia, sequencia):
+    """Calcula a identidade (%) percorrendo os blocos alinhados.
+
+    Evita depender de atributos potencialmente obsoletos (como target/query strings),
+    usando as coordenadas em alinhamento.aligned contra as sequências originais.
+    """
+    matches = 0
+    length = 0
+    ref_blocks, query_blocks = alinhamento.aligned
+    for (r0, r1), (q0, q1) in zip(ref_blocks, query_blocks):
+        # Tamanho do bloco é igual em ref e query para alinhamento local sem gaps internos no bloco
+        block_len = min(r1 - r0, q1 - q0)
+        for i in range(block_len):
+            if referencia[r0 + i] == sequencia[q0 + i]:
                 matches += 1
+        length += block_len
     return (matches / length) * 100 if length > 0 else 0
 
 def extrair_exon29_da_amostra(alinhamento, referencia, sequencia_analisada):
@@ -95,16 +108,25 @@ def realizar_alinhamento_grande(sequencia, ref_path="ref/ref.fasta", progress_ca
 
         aligner = PairwiseAligner()
         aligner.mode = 'local'
-        aligner.substitution_matrix = criar_matriz_dna()
+        matriz = criar_matriz_dna()
+        if matriz is not None:
+            aligner.substitution_matrix = matriz
+        else:
+            # Fallback: define escores simples direto no aligner
+            aligner.match_score = 5
+            aligner.mismatch_score = -4
         aligner.open_gap_score = -7
         aligner.extend_gap_score = -2
 
         if progress_callback:
             progress_callback(0.3, "Executando alinhamento completo...")
 
-        alignments = aligner.align(referencia, sequencia)
+        # Materializa imediatamente todos os alinhamentos em lista para evitar comportamento
+        # especial de objeto que causa ambiguidade em avaliação booleana.
+        alignments = list(aligner.align(referencia, sequencia))
+        total_aligns = len(alignments)
 
-        if not alignments:
+        if total_aligns == 0:
             return {
                 "error": "Nenhum alinhamento significativo encontrado",
                 "tamanhos": {
@@ -113,6 +135,7 @@ def realizar_alinhamento_grande(sequencia, ref_path="ref/ref.fasta", progress_ca
                 }
             }
 
+        # Seleciona melhor alinhamento diretamente (já é lista)
         melhor = max(alignments, key=lambda x: x.score)
 
         exon29_amostra = extrair_exon29_da_amostra(melhor, referencia, sequencia)
@@ -120,15 +143,25 @@ def realizar_alinhamento_grande(sequencia, ref_path="ref/ref.fasta", progress_ca
         if progress_callback:
             progress_callback(1.0, "Concluído")
 
+        # Calcula identidade sem usar atributos obsoletos
+        identidade = calcular_identidade_por_blocos(melhor, referencia, sequencia)
+
+        # Deriva inícios/fins a partir dos blocos alinhados
+        ref_blocks, query_blocks = melhor.aligned
+        inicio_ref = int(ref_blocks[0][0]) if len(ref_blocks) > 0 else 0
+        fim_ref = int(ref_blocks[-1][1]) if len(ref_blocks) > 0 else 0
+        inicio_query = int(query_blocks[0][0]) if len(query_blocks) > 0 else 0
+        fim_query = int(query_blocks[-1][1]) if len(query_blocks) > 0 else 0
+
         return {
             "sucesso": True,
             "melhor_alinhamento": {
                 "score": float(melhor.score),
-                "identidade": f"{calcular_identidade(melhor):.2f}%",
-                "inicio_ref": int(melhor.path[0][0]),
-                "fim_ref": int(melhor.path[-1][0]),
-                "inicio_query": int(melhor.path[0][1]),
-                "fim_query": int(melhor.path[-1][1])
+                "identidade": f"{identidade:.2f}%",
+                "inicio_ref": inicio_ref,
+                "fim_ref": fim_ref,
+                "inicio_query": inicio_query,
+                "fim_query": fim_query,
             },
             "tamanhos": {
                 "consulta": len(sequencia),

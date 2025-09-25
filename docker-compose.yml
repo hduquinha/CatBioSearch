@@ -27,6 +27,10 @@ services:
       - "5000:5000"
     networks:
       - catbio-network  
+    environment:
+      IA_HOST: ia
+      ENABLE_LLM: "true"  # altere para "true" para ativar geração de resumo LLM
+      GEMINI_API_KEY: "AIzaSyA1tPnnYcIE4vUanxb2qUxO5bhIzflyHcA"   # defina sua chave real aqui ou via variável externa
 
   ia:
     build: ./ia

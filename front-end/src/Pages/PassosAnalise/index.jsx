@@ -72,8 +72,8 @@ const Cadastro = () => {
         Metodo: formData.sequenciamento,
     };
 
-    // Redireciona imediatamente para a tela de carregamento
-    navigate("/loading");
+    // Redireciona para a tela de carregamento e só finaliza quando a análise terminar
+    navigate("/loading", { state: { done: false } });
 
     // Aguarda o redirecionamento completar antes de continuar com o processamento
     setTimeout(async () => {
@@ -94,7 +94,9 @@ const Cadastro = () => {
             }
 
             // Aqui você pode opcionalmente atualizar algo no backend ou estado global
-
+            // Sinaliza para a página de loading que terminou
+            navigate("/loading", { replace: true, state: { done: true } });
+            // Pequeno delay visual e segue para relatorios (feito dentro da LoadingPage agora)
         } catch (err) {
             console.error("Erro ao cadastrar o relatório:", err);
             // Você pode salvar o erro em um contexto ou exibir na tela de loading se quiser

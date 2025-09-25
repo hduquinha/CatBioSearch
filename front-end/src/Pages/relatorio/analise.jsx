@@ -26,15 +26,23 @@ const Relatorio = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
-        // Busca dados do relatório do animal
-        const relatorioResponse = await api.get("relatorios/ultimo");
-        setRelatorio(relatorioResponse.data);
-        
-        // Busca dados da análise genética
-        const analiseResponse = await fasta.get("dados-analise");
-        setDadosAnalise(analiseResponse.data);
-        
+        // Busca relatório e análise em paralelo, tolerando falhas parciais
+        const [relRes, analRes] = await Promise.allSettled([
+          api.get("/relatorios/ultimo"),
+          fasta.get("/dados-analise"),
+        ]);
+
+        if (relRes.status === "fulfilled") {
+          setRelatorio(relRes.value.data);
+        }
+        if (analRes.status === "fulfilled") {
+          setDadosAnalise(analRes.value.data);
+        }
+
+        // Só mostra erro se ambas falharem (ex.: não logado e ainda sem análise)
+        if (relRes.status === "rejected" && analRes.status === "rejected") {
+          throw new Error("Falha ao carregar dados do relatório e da análise");
+        }
       } catch (err) {
         console.error("Erro ao carregar dados:", err);
         setError("Erro ao carregar dados do relatório");

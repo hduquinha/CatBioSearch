@@ -1,59 +1,80 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // Importa o hook useNavigate
+import { useNavigate, useLocation } from 'react-router-dom';
 import figure from '../../Components/assets/figure-home.svg';
 
 const LoadingPage = () => {
   const [progress, setProgress] = useState(0);
-  const navigate = useNavigate(); // Hook para redirecionar
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Recebe via state a promessa (ou sinal) de que o backend terminou
+  // Vamos apenas animar a barra enquanto esperamos um sinal de término
+  const done = location.state?.done === true;
+
+  // Polling para detectar término via backend (GET /dados-analise)
+  useEffect(() => {
+    if (done) return; // Se já vier sinalizado como concluído, não precisa poll
+
+    let cancelled = false;
+    const start = Date.now();
+    const timeoutMs = 120000; // 2 minutos de tolerância
+
+    const poll = async () => {
+      if (cancelled) return;
+      try {
+        const res = await fetch('http://localhost:5000/dados-analise');
+        if (res.ok) {
+          // Concluiu no backend
+          setProgress(100);
+          navigate('/relatorios');
+          return;
+        }
+      } catch (e) {
+        // Ignora erros de rede e continua tentando
+      }
+
+      if (Date.now() - start >= timeoutMs) {
+        // Fallback: finaliza mesmo assim para não travar usuário
+        setProgress(100);
+        navigate('/relatorios');
+        return;
+      }
+
+      setTimeout(poll, 1500);
+    };
+
+    poll();
+    return () => { cancelled = true; };
+  }, [done, navigate]);
 
   useEffect(() => {
-    let timer;
-    const progressInterval = setInterval(() => {
-      setProgress((prevProgress) => {
-        if (prevProgress >= 100) {
-          clearInterval(progressInterval);
-          return 100;
-        }
-
-        let newProgress = prevProgress + 1;
-
-        // Pausa nos 27% e 80%
-        if (newProgress === 27 || newProgress === 80) {
-          clearInterval(progressInterval);
-          setTimeout(() => {
-            timer = setInterval(() => {
-              setProgress((prevProgress) => {
-                if (prevProgress >= 100) {
-                  clearInterval(timer);
-                  return 100;
-                }
-                return prevProgress + 1;
-              });
-            }, 800); // Retorna a atualização a cada 150ms
-          }, 4000); // Pausa de 2 segundos
-        }
-
-        return newProgress;
+    // Animação progressiva: acelera no início, desacelera depois.
+    // Mantém no máx. 97% até receber done=true.
+    if (done) return; // Quando done=true, outro efeito cuida de finalizar.
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 97) return prev; // não finalize sem done
+        const step = prev < 30 ? 2 : prev < 60 ? 1 : 0.5;
+        const next = prev + step;
+        return next > 97 ? 97 : next;
       });
-    }, 1800); // A cada 150ms a barra aumenta 1%
-
-    return () => clearInterval(progressInterval); // Limpar o intervalo quando o componente for desmontado
-  }, []);
+    }, 120);
+    return () => clearInterval(interval);
+  }, [done]);
 
   useEffect(() => {
-    // Redireciona para outra página quando o progresso atinge 100%
-    if (progress === 100) {
-      setTimeout(() => {
-        navigate('/relatorios'); // 
-      }, 500); // Pequeno delay para o usuário perceber o 100%
+    // Ao receber done=true, completa imediatamente e navega
+    if (done) {
+      setProgress(100);
+      const t = setTimeout(() => navigate('/relatorios'), 400);
+      return () => clearTimeout(t);
     }
-  }, [progress, navigate]);
+  }, [done, navigate]);
 
   return (
     <div style={styles.container}>
       <div style={styles.content}>
         <div style={styles.illustration}>
-          {/* Coloque aqui a imagem ou a ilustração desejada */}
           <img
             src={figure}
             alt="Illustration"
