@@ -35,12 +35,33 @@ const initRelatorioModel = async () =>{
         Metodo:{
             type: Sequelize.STRING,
             allowNull: false
-        }
+        },
+        UserId: {
+             type: Sequelize.INTEGER,
+              allowNull: false
+       },
+       // Campos de resultado da análise PKD1
+       Identidade: {
+            type: Sequelize.STRING,
+            allowNull: true
+       },
+       Score: {
+            type: Sequelize.FLOAT,
+            allowNull: true
+       },
+       Classificacao: {
+            type: Sequelize.STRING,
+            allowNull: true
+       },
+       Confianca: {
+            type: Sequelize.FLOAT,
+            allowNull: true
+       }
     
 
 })
 
-await Relatorio.sync();
+await Relatorio.sync({ alter: true });
 return Relatorio
 
 }

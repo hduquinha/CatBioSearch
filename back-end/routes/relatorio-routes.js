@@ -21,7 +21,7 @@ router.post('/novo-relatorio', autenticacao, async (req, res) => {
     const { Nome, Sexo, Cliente, Idade, Raca, Material, Metodo } = req.body;
 
     try {
-        await Relatorio.create({
+        const created = await Relatorio.create({
             Nome,
             Sexo,
             Cliente,
@@ -29,8 +29,9 @@ router.post('/novo-relatorio', autenticacao, async (req, res) => {
             Raca,
             Material,
             Metodo,
+            UserId: req.session.user.id // Supondo que o ID do usuário esteja armazenado na sessão
         });
-        res.json({ message: 'Relatório criado com sucesso' });
+        res.json({ message: 'Relatório criado com sucesso', id: created.id });
     } catch (err) {
         console.error(`Ocorreu um erro: ${err}`);
         res.status(500).send('Ocorreu um erro ao criar o relatório.');
@@ -78,7 +79,7 @@ router.get('/relatorio/:id', autenticacao, async (req, res) => {
 
     try {
         const relatorio = await Relatorio.findByPk(id, {
-            attributes: ['id', 'Nome', 'Sexo', 'Cliente', 'Idade', "Raca"]
+            attributes: ['id', 'Nome', 'Sexo', 'Cliente', 'Idade', 'Raca', 'Material', 'Metodo', 'Identidade', 'Score', 'Classificacao', 'Confianca']
         });
 
         if (!relatorio) {
@@ -143,7 +144,7 @@ router.get('/ultimo', autenticacao, async (req, res) => {
     try {
         const relatorio = await Relatorio.findOne({
             order: [['id', 'DESC']], // Ordena pelo ID em ordem decrescente
-            attributes: ['id', 'Nome', 'Sexo', 'Cliente', 'Idade', 'Raca', 'Material', 'Metodo']
+            attributes: ['id', 'Nome', 'Sexo', 'Cliente', 'Idade', 'Raca', 'Material', 'Metodo', 'Identidade', 'Score', 'Classificacao', 'Confianca']
         });
 
         if (!relatorio) {
@@ -163,7 +164,7 @@ router.get('/relatorio/analise/:id', autenticacao, async (req, res) => {
 
     try {
         const relatorio = await Relatorio.findByPk(id, {
-            attributes: ['id', 'Nome', 'Sexo', 'Cliente', 'Idade', 'Raca', 'Material', 'Metodo']
+            attributes: ['id', 'Nome', 'Sexo', 'Cliente', 'Idade', 'Raca', 'Material', 'Metodo', 'Identidade', 'Score', 'Classificacao', 'Confianca']
         });
 
         if (!relatorio) {
@@ -177,6 +178,51 @@ router.get('/relatorio/analise/:id', autenticacao, async (req, res) => {
     }
 });
 
+router.get('/meus-relatorios', autenticacao, async (req, res) => {
+    try {
+        const userId = req.session.user.id;
+        const relatorios = await Relatorio.findAll({
+            where: { UserId: userId }
+        });
+
+        if (relatorios.length === 0) {
+            return res.status(404).json({ message: 'Nenhum relatório encontrado para este usuário.' });
+        }
+
+        res.json({
+            message: 'Relatórios do usuário encontrados',
+            relatorios: relatorios,
+        });
+    } catch (err) {
+        console.error(`Erro ao buscar relatórios do usuário: ${err}`);
+        res.status(500).send('Erro ao buscar relatórios do usuário');
+    }
+});
+
+// Nova rota: receber resultados da análise e persistir no relatório
+router.post('/relatorio/:id/resultado-pkd1', autenticacao, async (req, res) => {
+    const { id } = req.params;
+    const { identidade, score, classificacao, confianca } = req.body;
+
+    try {
+        const relatorio = await Relatorio.findByPk(id);
+        if (!relatorio) {
+            return res.status(404).json({ message: 'Relatório não encontrado.' });
+        }
+
+        await relatorio.update({
+            Identidade: identidade ?? null,
+            Score: typeof score === 'number' ? score : (parseFloat(score) || null),
+            Classificacao: classificacao ?? null,
+            Confianca: typeof confianca === 'number' ? confianca : (parseFloat(confianca) || null)
+        });
+
+        return res.json({ message: 'Resultado PKD1 salvo com sucesso.', relatorio });
+    } catch (err) {
+        console.error(`Erro ao salvar resultado PKD1: ${err}`);
+        return res.status(500).json({ message: 'Erro ao salvar resultado PKD1.' });
+    }
+});
 
 
 
