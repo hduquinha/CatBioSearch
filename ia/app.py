@@ -20,26 +20,53 @@ def classificar():
     if not data:
         return jsonify({"error": "Nenhum dado JSON fornecido."}), 400
 
-    try:
-        sequencia = data["alinhamento_result"]["exon29_amostra"]
-    except KeyError:
+    alinhamento_result = data.get("alinhamento_result")
+    if not isinstance(alinhamento_result, dict):
         return jsonify({
-        "error": "JSON inválido. Esperado: {'alinhamento_result': {'exon29_amostra': 'SEQUENCIA'}}"
-    }), 400
+            "error": "JSON inválido. Esperado chave 'alinhamento_result' com objeto."
+        }), 400
 
+    sequencia = alinhamento_result.get("exon29_amostra")
+    if not sequencia or "Não foi possível" in sequencia:
+        return jsonify({
+            "error": "Exon29 indisponível na amostra. Não foi possível classificar."
+        }), 422
+
+    referencia = alinhamento_result.get("exon29_referencia")
+    variantes = alinhamento_result.get("variantes_exon29", [])
+    metricas = alinhamento_result.get("metricas_exon29", {})
+
+    identidade_pct = None
+    melhor = alinhamento_result.get("melhor_alinhamento", {})
+    if isinstance(melhor, dict):
+        identidade_pct = melhor.get("identidade_pct")
+        if identidade_pct is None:
+            identidade_str = melhor.get("identidade")
+            if isinstance(identidade_str, str) and identidade_str.endswith("%"):
+                try:
+                    identidade_pct = float(identidade_str.strip(" %"))
+                except ValueError:
+                    identidade_pct = None
 
     try:
         print("\n📥 Sequência recebida para classificação:")
         print(sequencia)
 
-        features = extrair_features(sequencia)
+        features = extrair_features(
+            sequencia,
+            referencia=referencia,
+            variantes=variantes,
+            identidade=identidade_pct,
+            metricas=metricas,
+        )
         features_df = pd.DataFrame([features])
         pred = modelo.predict(features_df)[0]
         prob = modelo.predict_proba(features_df)[0].max()
 
         resultado = {
             "classificacao": int(pred),
-            "confianca": f"{float(prob)*100:.2f}%"
+            "confianca": f"{float(prob)*100:.2f}%",
+            "confianca_float": float(prob),
         }
 
         print("\n✅ Resultado da classificação:")

@@ -1,10 +1,17 @@
+import io
+from typing import Dict, List, Tuple
+
 from Bio import SeqIO
-from Bio.Align import PairwiseAligner
+from Bio.Align import Alignment, PairwiseAligner
 from Bio.Align import substitution_matrices
 
 # Coordenadas aproximadas do exon29 no gene PKD1 de referência (em nucleotídeos)
 EXON29_INICIO_REF = 9950
 EXON29_FIM_REF = 10150
+
+def _carregar_referencia(ref_path: str) -> str:
+    with open(ref_path) as handle:
+        return str(SeqIO.read(handle, "fasta").seq).upper()
 
 def validar_sequencia(seq):
     """Valida sequências de DNA"""
@@ -12,31 +19,63 @@ def validar_sequencia(seq):
         raise ValueError("Sequência vazia")
     return seq.upper()
 
-def buscar_gene_pkd1(conteudo):
-    """Extrai sequência do gene PKD1 de arquivo FASTA"""
+def buscar_gene_pkd1(conteudo, ref_path: str = "ref/ref.fasta"):
+    """Extrai sequência do gene PKD1 de arquivo FASTA.
+
+    Tenta identificar o gene primeiro pelo cabeçalho. Caso não encontre,
+    realiza um alinhamento rápido contra a referência para escolher o
+    candidato com melhor similaridade.
+    """
     try:
-        cabecalho = ''
-        sequencias = []
-        gene_encontrado = False
+        fasta_io = io.StringIO("\n".join(conteudo))
+        registros = list(SeqIO.parse(fasta_io, "fasta"))
+        if not registros:
+            return {"error": "Arquivo FASTA vazio ou inválido"}
 
-        for linha in conteudo:
-            linha = linha.strip()
-            if linha.startswith('>'):
-                if gene_encontrado:
-                    break
-                if 'PKD1' in linha.upper():
-                    cabecalho = linha
-                    gene_encontrado = True
-            elif gene_encontrado:
-                sequencias.append(linha)
+        registros_pkd1 = [r for r in registros if "PKD1" in r.description.upper()]
+        if registros_pkd1:
+            selecionado = max(registros_pkd1, key=lambda r: len(r.seq))
+            return {
+                "cabecalho": selecionado.description,
+                "sequencia": validar_sequencia(str(selecionado.seq)),
+                "metadados": {
+                    "metodo_identificacao": "descricao",
+                    "total_registros": len(registros),
+                },
+            }
 
-        if not gene_encontrado:
+        referencia = _carregar_referencia(ref_path)
+        aligner = PairwiseAligner()
+        aligner.mode = "local"
+        aligner.match_score = 2
+        aligner.mismatch_score = -1
+        aligner.open_gap_score = -5
+        aligner.extend_gap_score = -1
+
+        melhor_registro = None
+        melhor_score = float("-inf")
+
+        for registro in registros:
+            try:
+                seq = validar_sequencia(str(registro.seq))
+            except ValueError:
+                continue
+            score = aligner.score(referencia, seq)
+            if score > melhor_score:
+                melhor_score = score
+                melhor_registro = registro
+
+        if melhor_registro is None:
             return {"error": "Gene PKD1 não encontrado no arquivo"}
 
-        sequencia = ''.join(sequencias)
         return {
-            'cabecalho': cabecalho,
-            'sequencia': validar_sequencia(sequencia)
+            "cabecalho": melhor_registro.description,
+            "sequencia": validar_sequencia(str(melhor_registro.seq)),
+            "metadados": {
+                "metodo_identificacao": "alinhamento",
+                "score_identificacao": melhor_score,
+                "total_registros": len(registros),
+            },
         }
 
     except Exception as e:
@@ -73,27 +112,84 @@ def calcular_identidade_por_blocos(alinhamento, referencia, sequencia):
         length += block_len
     return (matches / length) * 100 if length > 0 else 0
 
-def extrair_exon29_da_amostra(alinhamento, referencia, sequencia_analisada):
-    """Extrai a sequência da amostra que se alinha ao exon29 da referência"""
-    ref_blocks = alinhamento.aligned[0]  # blocos na referência
-    query_blocks = alinhamento.aligned[1]  # blocos na amostra
+def _analisar_exon29(
+    alinhamento: Alignment,
+    referencia: str,
+    sequencia_analisada: str,
+) -> Tuple[str, List[Dict[str, object]], Dict[str, int]]:
+    """Deriva sequência do exon29 na amostra e descreve variantes."""
 
-    # Percorre os blocos alinhados procurando interseção com exon29
-    for (ref_start, ref_end), (query_start, query_end) in zip(ref_blocks, query_blocks):
-        if ref_start <= EXON29_INICIO_REF < ref_end or ref_start < EXON29_FIM_REF <= ref_end or (
-            EXON29_INICIO_REF <= ref_start and ref_end <= EXON29_FIM_REF
-        ):
-            # Calcula os limites do trecho correspondente na query
-            exon_inicio_query = query_start + (EXON29_INICIO_REF - ref_start) if ref_start < EXON29_INICIO_REF else query_start
-            exon_fim_query = query_start + (EXON29_FIM_REF - ref_start) if ref_start < EXON29_FIM_REF else query_end
+    path = alinhamento.path
+    if not path or len(path) < 2:
+        return None, [], {
+            "total_insercoes_nt": 0,
+            "total_delecoes_nt": 0,
+        }
 
-            # Garante que os índices não extrapolem os limites da sequência analisada
-            exon_inicio_query = max(0, exon_inicio_query)
-            exon_fim_query = min(len(sequencia_analisada), exon_fim_query)
+    exon_seq: List[str] = []
+    variantes: List[Dict[str, object]] = []
+    total_ins_nt = 0
+    total_del_nt = 0
 
-            return sequencia_analisada[exon_inicio_query:exon_fim_query]
+    ref_pos, query_pos = path[0]
+    for idx in range(len(path) - 1):
+        prox_ref, prox_query = path[idx + 1]
 
-    return "Não foi possível localizar o exon29 na amostra analisada"
+        while ref_pos < prox_ref or query_pos < prox_query:
+            dentro_exon = EXON29_INICIO_REF <= ref_pos < EXON29_FIM_REF
+
+            if ref_pos < prox_ref and query_pos < prox_query:
+                ref_base = referencia[ref_pos]
+                query_base = sequencia_analisada[query_pos]
+                if dentro_exon:
+                    exon_seq.append(query_base)
+                    if ref_base != query_base:
+                        variantes.append({
+                            "tipo": "substituicao",
+                            "posicao_genomica": ref_pos + 1,
+                            "posicao_exon": (ref_pos - EXON29_INICIO_REF) + 1,
+                            "ref": ref_base,
+                            "alt": query_base,
+                        })
+                ref_pos += 1
+                query_pos += 1
+            elif ref_pos < prox_ref:
+                if dentro_exon:
+                    variantes.append({
+                        "tipo": "delecao",
+                        "posicao_genomica": ref_pos + 1,
+                        "posicao_exon": (ref_pos - EXON29_INICIO_REF) + 1,
+                        "ref": referencia[ref_pos],
+                        "alt": "-",
+                        "tamanho": 1,
+                    })
+                    exon_seq.append("-")
+                    total_del_nt += 1
+                ref_pos += 1
+            else:
+                if dentro_exon:
+                    variantes.append({
+                        "tipo": "insercao",
+                        "posicao_genomica": ref_pos + 1,
+                        "posicao_exon": (ref_pos - EXON29_INICIO_REF) + 1,
+                        "ref": "-",
+                        "alt": sequencia_analisada[query_pos],
+                        "tamanho": 1,
+                    })
+                    exon_seq.append(sequencia_analisada[query_pos])
+                    total_ins_nt += 1
+                query_pos += 1
+
+    if not exon_seq:
+        return None, variantes, {
+            "total_insercoes_nt": total_ins_nt,
+            "total_delecoes_nt": total_del_nt,
+        }
+
+    return "".join(exon_seq), variantes, {
+        "total_insercoes_nt": total_ins_nt,
+        "total_delecoes_nt": total_del_nt,
+    }
 
 
 def realizar_alinhamento_grande(sequencia, ref_path="ref/ref.fasta", progress_callback=None):
@@ -103,8 +199,7 @@ def realizar_alinhamento_grande(sequencia, ref_path="ref/ref.fasta", progress_ca
         if progress_callback:
             progress_callback(0.1, "Validando sequência...")
 
-        with open(ref_path) as handle:
-            referencia = str(SeqIO.read(handle, "fasta").seq).upper()
+        referencia = _carregar_referencia(ref_path)
 
         aligner = PairwiseAligner()
         aligner.mode = 'local'
@@ -138,7 +233,16 @@ def realizar_alinhamento_grande(sequencia, ref_path="ref/ref.fasta", progress_ca
         # Seleciona melhor alinhamento diretamente (já é lista)
         melhor = max(alignments, key=lambda x: x.score)
 
-        exon29_amostra = extrair_exon29_da_amostra(melhor, referencia, sequencia)
+        exon29_amostra, variantes, info_variantes = _analisar_exon29(melhor, referencia, sequencia)
+        exon29_referencia = referencia[EXON29_INICIO_REF:EXON29_FIM_REF]
+        exon_len = len(exon29_referencia)
+        if exon29_amostra:
+            bases_validas_exon = [b for b in exon29_amostra if b not in {"-", ""}]
+            cobertura = (len(bases_validas_exon) / exon_len) * 100 if exon_len > 0 else 0.0
+            exon29_amostra_str = exon29_amostra
+        else:
+            cobertura = 0.0
+            exon29_amostra_str = "Não foi possível localizar o exon29 na amostra analisada"
 
         if progress_callback:
             progress_callback(1.0, "Concluído")
@@ -158,6 +262,7 @@ def realizar_alinhamento_grande(sequencia, ref_path="ref/ref.fasta", progress_ca
             "melhor_alinhamento": {
                 "score": float(melhor.score),
                 "identidade": f"{identidade:.2f}%",
+                "identidade_pct": float(identidade),
                 "inicio_ref": inicio_ref,
                 "fim_ref": fim_ref,
                 "inicio_query": inicio_query,
@@ -167,7 +272,15 @@ def realizar_alinhamento_grande(sequencia, ref_path="ref/ref.fasta", progress_ca
                 "consulta": len(sequencia),
                 "referencia": len(referencia)
             },
-            "exon29_amostra": exon29_amostra
+            "exon29_amostra": exon29_amostra_str,
+            "exon29_referencia": exon29_referencia,
+            "variantes_exon29": variantes,
+            "metricas_exon29": {
+                "cobertura_pct": round(cobertura, 2),
+                "total_variantes": len(variantes),
+                "exon_disponivel": bool(exon29_amostra),
+                **info_variantes,
+            },
         }
 
     except Exception as e:

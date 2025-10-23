@@ -153,17 +153,32 @@ def buscar_pkd1():
     print(alinhamento_result.get('exon29_amostra', 'N/D'), flush=True)
 
     melhor = alinhamento_result.get('melhor_alinhamento', {})
+    metricas_exon = alinhamento_result.get('metricas_exon29', {})
+    variantes_detectadas = alinhamento_result.get('variantes_exon29', [])
     if 'score' in melhor:
         print(f"\n📏 Similaridade do alinhamento: {melhor['score']:.2f}")
+    if metricas_exon:
+        print(f"📊 Cobertura estimada do exon29: {metricas_exon.get('cobertura_pct', 'N/D')}%")
+        print(f"🧪 Variantes detectadas no exon29: {metricas_exon.get('total_variantes', 0)}")
+        for variante in variantes_detectadas[:5]:
+            print(f"   • {variante['tipo']} @ exon {variante.get('posicao_exon', 'N/D')} ({variante.get('ref')}→{variante.get('alt')})")
+        if len(variantes_detectadas) > 5:
+            print(f"   • ... +{len(variantes_detectadas) - 5} variantes")
 
     # Disponibiliza dados para /dados-analise imediatamente após alinhamento
     try:
         global ultimo_resultado_analise
         ultimo_resultado_analise = {
             "identidade": melhor.get("identidade"),
+            "identidade_pct": melhor.get("identidade_pct"),
             "score": melhor.get("score"),
             "classificacao": None,
             "confianca": None,
+            "variantes_exon29": variantes_detectadas,
+            "metricas_exon29": metricas_exon,
+            "exon29_amostra": alinhamento_result.get("exon29_amostra"),
+            "exon29_referencia": alinhamento_result.get("exon29_referencia"),
+            "gene_metadados": gene_info.get("metadados"),
         }
     except Exception:
         pass
@@ -174,7 +189,7 @@ def buscar_pkd1():
     try:
         response = requests.post(
             outra_api_url,
-            json={"alinhamento_result": {"exon29_amostra": alinhamento_result.get('exon29_amostra', '')}}
+            json={"alinhamento_result": alinhamento_result}
         )
         if response.status_code != 200:
             print(f"\n❌ Erro ao enviar para a IA: {response.status_code} - {response.text}")
@@ -190,6 +205,7 @@ def buscar_pkd1():
                 ultimo_resultado_analise.update({
                     "classificacao": resultado_ia.get("classificacao"),
                     "confianca": resultado_ia.get("confianca"),
+                    "confianca_float": resultado_ia.get("confianca_float"),
                 })
             except Exception:
                 pass
@@ -201,10 +217,13 @@ def buscar_pkd1():
     try:
         contexto_llm = {
             "identidade": ultimo_resultado_analise.get("identidade"),
+            "identidade_pct": ultimo_resultado_analise.get("identidade_pct"),
             "score": ultimo_resultado_analise.get("score"),
             "classificacao": ultimo_resultado_analise.get("classificacao"),
             "confianca": ultimo_resultado_analise.get("confianca"),
-            "exon29_amostra": alinhamento_result.get('exon29_amostra')
+            "exon29_amostra": alinhamento_result.get('exon29_amostra'),
+            "variantes_exon29": variantes_detectadas,
+            "metricas_exon29": metricas_exon,
         }
         resumo_texto = generate_llm_summary(contexto_llm)
         ultimo_resultado_analise["relatorio_texto"] = resumo_texto
