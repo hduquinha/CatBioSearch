@@ -82,24 +82,53 @@ const Cadastro = () => {
             const response = await api.post("/relatorios/novo-relatorio", relatorioData);
             console.log(response.data.message);
 
+            const relatorioId = response?.data?.id;
+            let analiseJson = null;
+
             // Se tiver um arquivo, envia para a outra API
             if (formData.arquivo) {
                 const fileForm = new FormData();
                 fileForm.append("arquivo", formData.arquivo);
 
-                await fetch("http://localhost:5000/buscar-pkd1", {
+                const analiseResponse = await fetch("http://localhost:5000/buscar-pkd1", {
                     method: "POST",
                     body: fileForm,
                 });
+
+                try {
+                    analiseJson = await analiseResponse.json();
+                } catch (parseErr) {
+                    console.error("Não foi possível interpretar a resposta da análise:", parseErr);
+                }
+
+                if (!analiseResponse.ok) {
+                    const message = analiseJson?.error || "Falha ao processar a análise genética";
+                    throw new Error(message);
+                }
+
+                if (relatorioId && analiseJson) {
+                    const melhor = analiseJson?.alinhamento_result?.melhor_alinhamento || {};
+                    const ia = analiseJson?.classificacao_ia || {};
+
+                    try {
+                        await api.post(`/relatorios/relatorio/${relatorioId}/resultado-pkd1`, {
+                            identidade: melhor?.identidade ?? null,
+                            score: typeof melhor?.score === "number" ? melhor.score : melhor?.score ?? null,
+                            classificacao: ia?.classificacao ?? null,
+                            confianca: ia?.confianca ?? ia?.confianca_float ?? null,
+                        });
+                    } catch (persistErr) {
+                        console.error("Erro ao salvar resultado PKD1:", persistErr);
+                    }
+                }
             }
 
-            // Aqui você pode opcionalmente atualizar algo no backend ou estado global
             // Sinaliza para a página de loading que terminou
-            navigate("/loading", { replace: true, state: { done: true } });
+            navigate("/loading", { replace: true, state: { done: true, relatorioId, analiseJson } });
             // Pequeno delay visual e segue para relatorios (feito dentro da LoadingPage agora)
         } catch (err) {
             console.error("Erro ao cadastrar o relatório:", err);
-            // Você pode salvar o erro em um contexto ou exibir na tela de loading se quiser
+            navigate("/loading", { replace: true, state: { done: true, error: err?.message || "Erro ao processar análise" } });
         }
     }, 100); // Pequeno delay para garantir que o navigate seja processado
 };

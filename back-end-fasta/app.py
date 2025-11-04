@@ -6,6 +6,8 @@ import requests
 import os
 import json
 import time
+import numbers
+import math
 
 app = Flask(__name__)
 CORS(
@@ -33,6 +35,23 @@ def health():
 
 # Variável global para armazenar o último resultado da análise
 ultimo_resultado_analise = {}
+
+
+def _to_serializable(value):
+    """Converte recursivamente valores para tipos compatíveis com JSON."""
+    if isinstance(value, dict):
+        return {str(k): _to_serializable(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple, set)):
+        return [_to_serializable(v) for v in value]
+    if isinstance(value, numbers.Number):
+        coerced = value.item() if hasattr(value, "item") else value
+        if isinstance(coerced, float) and math.isnan(coerced):
+            return None
+        return coerced
+    if isinstance(value, (str, bool)) or value is None:
+        return value
+    # Fallback para tipos não suportados diretamente
+    return str(value)
 
 def sanitize_sequence(seq: str, max_len: int = 400):
     if not seq:
@@ -174,12 +193,14 @@ def buscar_pkd1():
             "score": melhor.get("score"),
             "classificacao": None,
             "confianca": None,
+            "confianca_float": None,
             "variantes_exon29": variantes_detectadas,
             "metricas_exon29": metricas_exon,
             "exon29_amostra": alinhamento_result.get("exon29_amostra"),
             "exon29_referencia": alinhamento_result.get("exon29_referencia"),
             "gene_metadados": gene_info.get("metadados"),
         }
+        ultimo_resultado_analise = _to_serializable(ultimo_resultado_analise)
     except Exception:
         pass
 
@@ -187,12 +208,23 @@ def buscar_pkd1():
     ia_host = os.getenv("IA_HOST", "ia")  # usar nome do serviço no docker compose
     outra_api_url = f"http://{ia_host}:6000/classificar-exon29"
     try:
+        payload_serializado = _to_serializable(alinhamento_result)
         response = requests.post(
             outra_api_url,
-            json={"alinhamento_result": alinhamento_result}
+            json={"alinhamento_result": payload_serializado}
         )
         if response.status_code != 200:
             print(f"\n❌ Erro ao enviar para a IA: {response.status_code} - {response.text}")
+            try:
+                ultimo_resultado_analise.update({
+                    "erro_ia": {
+                        "status": response.status_code,
+                        "detalhe": response.text[:600],
+                    }
+                })
+                ultimo_resultado_analise = _to_serializable(ultimo_resultado_analise)
+            except Exception:
+                pass
         else:
             resultado_ia = response.json()
             print("\n🤖 Resposta da IA:")
@@ -206,12 +238,21 @@ def buscar_pkd1():
                     "classificacao": resultado_ia.get("classificacao"),
                     "confianca": resultado_ia.get("confianca"),
                     "confianca_float": resultado_ia.get("confianca_float"),
+                    "erro_ia": None,
                 })
+                ultimo_resultado_analise = _to_serializable(ultimo_resultado_analise)
             except Exception:
                 pass
 
     except Exception as e:
         print(f"\n❌ Erro ao conectar com a IA: {e}")
+        try:
+            ultimo_resultado_analise.update({
+                "erro_ia": str(e),
+            })
+            ultimo_resultado_analise = _to_serializable(ultimo_resultado_analise)
+        except Exception:
+            pass
 
     # Geração de resumo LLM (opcional)
     try:
@@ -232,13 +273,15 @@ def buscar_pkd1():
         ultimo_resultado_analise["relatorio_texto"] = f"Falha ao gerar resumo: {e}"
         gene_info["relatorio_texto"] = ultimo_resultado_analise["relatorio_texto"]
 
+    ultimo_resultado_analise = _to_serializable(ultimo_resultado_analise)
+    gene_info = _to_serializable(gene_info)
     return jsonify(gene_info)
 
 @app.route('/dados-analise', methods=['GET'])
 def dados_analise():
     if not ultimo_resultado_analise:
         return jsonify({"error": "Nenhuma análise foi realizada ainda"}), 404
-    return jsonify(ultimo_resultado_analise)
+    return jsonify(_to_serializable(ultimo_resultado_analise))
 
 @app.route('/resumo-analise', methods=['GET'])
 def resumo_analise():

@@ -61,8 +61,8 @@ const initRelatorioModel = async () =>{
 
 })
 
-await Relatorio.sync({ alter: true });
-return Relatorio
+    await Relatorio.sync();
+    return Relatorio
 
 }
 
