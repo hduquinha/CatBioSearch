@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import Sidebar from '../../Components/Sidebar';
-import axios from "../../api";
+import Sidebar from "../../Components/Sidebar";
+import api from "../../api";
+import "./alterarRelatorio.css";
 
 const AlterarRelatorio = () => {
   const { id } = useParams();
@@ -12,21 +13,27 @@ const AlterarRelatorio = () => {
     Raca: "",
     Cliente: "",
     Idade: "",
-    Acoes: "",
-
+    Sexo: "",
+    Material: "",
+    Metodo: "",
   });
 
   const [isLoading, setIsLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     const fetchUser = async () => {
       if (id) {
         try {
-          const response = await axios.get(`/relatorios/relatorio/${id}`);
-          setFormData(response.data);
+          const response = await api.get(`/relatorios/relatorio/${id}`);
+          setFormData((prev) => ({
+            ...prev,
+            ...response.data,
+          }));
         } catch (error) {
           console.error("Erro ao carregar usuário:", error);
-          alert("Erro ao carregar usuário.");
+          setErrorMessage("Não foi possível carregar o relatório.");
         } finally {
           setIsLoading(false);
         }
@@ -43,146 +50,159 @@ const AlterarRelatorio = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setErrorMessage("");
+    setSaving(true);
     try {
+      const payload = {
+        Nome: formData.Nome,
+        Sexo: formData.Sexo,
+        Cliente: formData.Cliente,
+        Idade: formData.Idade,
+        Raca: formData.Raca,
+        Material: formData.Material,
+        Metodo: formData.Metodo,
+      };
+
       const response = id
-        ? await axios.put(`/relatorios/relatorio/${id}`, formData)
-        : await axios.post("/users/admin-cadastro", formData);
-      alert(response.data.message);
-      navigate("/acesso");
+        ? await api.put(`/relatorios/relatorio/${id}`, payload)
+        : await api.post("/relatorios/novo-relatorio", payload);
+
+      alert(response.data.message || "Relatório salvo com sucesso.");
+      navigate("/relatorios");
     } catch (error) {
       console.error("Erro ao salvar usuário:", error);
-      alert("Ocorreu um erro ao salvar o usuário.");
+      setErrorMessage("Não conseguimos salvar o relatório. Tente novamente.");
     }
-  };
-
-  // Mesmo estilo do AlterarUsuario
-  const containerStyle = {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "1rem",
-    minHeight: "100vh",
-    padding: "1rem",
-  };
-
-  const formStyle = {
-    display: "flex",
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: "1rem",
-    width: "100%",
-    maxWidth: "600px",
-  };
-
-  const columnStyle = {
-    display: "flex",
-    flexDirection: "column",
-    gap: "1rem",
-    flex: "1",
-    minWidth: "250px",
-  };
-
-  const buttonContainerStyle = {
-    display: "flex",
-    justifyContent: "space-between",
-    width: "100%",
-    maxWidth: "600px",
-    marginTop: "1rem",
-  };
-
-  const buttonStyle = {
-    padding: "0.75rem 1.5rem",
-    border: "none",
-    borderRadius: "5px",
-    cursor: "pointer",
-  };
-
-  const backButtonStyle = {
-    ...buttonStyle,
-    backgroundColor: "#ff7675",
-    color: "white",
-  };
-
-  const nextButtonStyle = {
-    ...buttonStyle,
-    backgroundColor: "green",
-    color: "white",
-  };
-
-  const labelStyle = {
-    fontWeight: "600",
-    fontSize: "14px",
-    color: "#333",
-  };
-
-  const inputStyle = {
-    width: "100%",
-    padding: "0.5rem",
-    borderRadius: "5px",
-    border: "1px solid #ccc",
+    setSaving(false);
   };
 
   if (isLoading) {
-    return <p style={{ textAlign: "center" }}>Carregando...</p>;
+    return <p className="edit-report-loading">Carregando...</p>;
   }
 
   return (
-    <div style={containerStyle}>
+    <div className="edit-report-page">
       <Sidebar />
-      <h2>{id ? "Alterar Informações do cadastro" : "Cadastrar Novo Usuário"}</h2>
-      <form style={formStyle}>
-        <div style={columnStyle}>
-          <label style={labelStyle}>Nome</label>
-          <input
-            style={inputStyle}
-            type="text"
-            name="Nome"
-            placeholder="Digite o nome completo"
-            value={formData.Nome}
-            onChange={handleInputChange}
-          />
+      <main className="edit-report-content">
+        <header className="edit-report-header">
+          <div>
+            <p className="edit-report-kicker">Relatórios</p>
+            <h1>{id ? "Alterar relatório" : "Novo relatório"}</h1>
+            <p className="edit-report-subtitle">
+              Atualize os dados clínicos do felino antes de gerar o laudo final.
+            </p>
+          </div>
+          <button className="ghost-button" onClick={() => navigate(-1)}>
+            Voltar
+          </button>
+        </header>
 
-                 <label style={labelStyle}>Raça</label>
-          <input
-            style={inputStyle}
-            type="text"
-            name="Nome"
-            placeholder="Digite o nome completo"
-            value={formData.Raca}
-            onChange={handleInputChange}
-          />
-                    <label style={labelStyle}>Cliente</label>
-          <input
-            style={inputStyle}
-            type="text"
-            name="Nome"
-            placeholder="Digite o nome completo"
-            value={formData.Cliente}
-            onChange={handleInputChange}
-          />
-                    <label style={labelStyle}>Idade</label>
-          <input
-            style={inputStyle}
-            type="text"
-            name="Nome"
-            placeholder="Digite o nome completo"
-            value={formData.Idade}
-            onChange={handleInputChange}
-          />
+        <section className="edit-report-card">
+          <div className="card-head">
+            <div>
+              <p className="panel-kicker">Ficha do paciente</p>
+              <h2>Dados essenciais</h2>
+            </div>
+            <span className="chip neutral">Campos obrigatórios *</span>
+          </div>
 
-        
-        </div>
-      </form>
-      <div style={buttonContainerStyle}>
-        <button style={backButtonStyle} onClick={() => navigate("/acesso")}>
-          Voltar
-        </button>
-        <button style={nextButtonStyle} onClick={handleSubmit}>
-          {id ? "Salvar Alterações" : "Finalizar Cadastro →"}
-        </button>
-      </div>
+          {errorMessage && <p className="form-error">{errorMessage}</p>}
+
+          <form onSubmit={handleSubmit} className="edit-report-form">
+            <div className="edit-report-grid">
+              <label className="edit-report-field">
+                <span>Nome *</span>
+                <input
+                  type="text"
+                  name="Nome"
+                  value={formData.Nome}
+                  onChange={handleInputChange}
+                  placeholder="Ex: Luna"
+                  required
+                />
+              </label>
+
+              <label className="edit-report-field">
+                <span>Raça *</span>
+                <input
+                  type="text"
+                  name="Raca"
+                  value={formData.Raca}
+                  onChange={handleInputChange}
+                  placeholder="Ex: Persa"
+                  required
+                />
+              </label>
+
+              <label className="edit-report-field">
+                <span>Cliente *</span>
+                <input
+                  type="text"
+                  name="Cliente"
+                  value={formData.Cliente}
+                  onChange={handleInputChange}
+                  placeholder="Responsável pelo felino"
+                  required
+                />
+              </label>
+
+              <label className="edit-report-field">
+                <span>Idade (anos)</span>
+                <input
+                  type="number"
+                  name="Idade"
+                  value={formData.Idade}
+                  onChange={handleInputChange}
+                  placeholder="Ex: 3"
+                  min="0"
+                />
+              </label>
+
+              <label className="edit-report-field">
+                <span>Sexo</span>
+                <select name="Sexo" value={formData.Sexo} onChange={handleInputChange}>
+                  <option value="">Selecione</option>
+                  <option value="Fêmea">Fêmea</option>
+                  <option value="Macho">Macho</option>
+                </select>
+              </label>
+
+              <label className="edit-report-field">
+                <span>Material coletado</span>
+                <input
+                  type="text"
+                  name="Material"
+                  value={formData.Material}
+                  onChange={handleInputChange}
+                  placeholder="Ex: Swab bucal"
+                />
+              </label>
+
+              <label className="edit-report-field">
+                <span>Método</span>
+                <input
+                  type="text"
+                  name="Metodo"
+                  value={formData.Metodo}
+                  onChange={handleInputChange}
+                  placeholder="Ex: Sequenciamento"
+                />
+              </label>
+            </div>
+
+            <div className="edit-report-actions">
+              <button type="button" className="ghost-button" onClick={() => navigate(-1)}>
+                Cancelar
+              </button>
+              <button type="submit" className="primary-button" disabled={saving}>
+                {saving ? "Salvando..." : id ? "Salvar alterações" : "Criar relatório"}
+              </button>
+            </div>
+          </form>
+        </section>
+      </main>
     </div>
   );
 };
