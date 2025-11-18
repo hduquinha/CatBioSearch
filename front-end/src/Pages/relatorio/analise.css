@@ -119,6 +119,13 @@
   background: var(--surface);
 }
 
+.summary-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
 .summary-card.safe {
   border-color: #34d399;
 }
@@ -145,6 +152,23 @@
 .summary-card .summary-helper {
   font-size: 14px;
   color: var(--muted);
+}
+
+.summary-llm {
+  margin: 10px 0 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #1f2937;
+}
+
+.summary-llm-prob {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #e0f2fe;
+  color: #0f172a;
+  white-space: nowrap;
 }
 
 .visual-grid {
@@ -309,6 +333,12 @@
 
 .llm-text.error {
   color: #b91c1c;
+}
+
+.llm-text.meta {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
 }
 
 @media (max-width: 1024px) {

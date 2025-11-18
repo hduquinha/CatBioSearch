@@ -1,75 +1,78 @@
 /* Estilo geral do componente */
 .rna-sequence {
-    font-family: "Arial", sans-serif;
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    text-align: center;
-  }
-  
-  .rna-sequence h3 {
-    font-size: 18px;
-    font-weight: bold;
-    color: #555;
-    margin-bottom: 20px;
-  }
-  
-  /* Grupo da sequência */
-  .sequence-group {
-    margin-bottom: 30px;
-  }
-  
-  .sequence-group p {
-    font-size: 14px;
-    font-weight: bold;
-    color: #555;
-    margin-bottom: 10px;
-  }
-  
-  /* Sequência de círculos */
-  .sequence {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 10px;
-  }
-  
-  .circle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    font-size: 16px;
-    font-weight: bold;
-    color: #fff;
-  }
-  
-  .circle.green {
-    background-color: #4caf50;
-  }
-  
-  .circle.yellow {
-    background-color: #ffc107;
-  }
-  
-  .circle.pink {
-    background-color: #e57373;
-  }
-  
-  /* Labels abaixo dos círculos */
-  .labels {
-    display: flex;
-    justify-content: center;
-    gap: 50px;
-    margin-top: 5px;
-  }
-  
-  .label {
-    font-size: 14px;
-    font-weight: bold;
-    color: #555;
-  }
-  
+  background-color: #fff;
+  padding: 18px;
+  border-radius: 16px;
+  box-shadow: 0 12px 28px rgba(17, 24, 39, 0.08);
+  border: 1px solid rgba(17, 24, 39, 0.08);
+}
+
+.rna-head h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #111827;
+}
+
+.rna-head p {
+  margin: 4px 0 18px;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.rna-windows {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.rna-window {
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  border-radius: 14px;
+  padding: 12px 14px 16px;
+  background: #f8fafc;
+}
+
+.stack-column.rna.match {
+  background: #2563eb;
+}
+
+.stack-column.rna.mismatch {
+  background: #f97316;
+}
+
+.stack-column.rna.gap {
+  background: #9333ea;
+}
+
+.codon-track {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.codon-badge {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: rgba(37, 99, 235, 0.12);
+  color: #1d4ed8;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.codon-badge strong {
+  font-size: 12px;
+  color: #0f172a;
+  letter-spacing: 0.02em;
+}
+
+.codon-badge.diff {
+  background: rgba(220, 38, 38, 0.12);
+  color: #b91c1c;
+  border-color: rgba(220, 38, 38, 0.2);
+}

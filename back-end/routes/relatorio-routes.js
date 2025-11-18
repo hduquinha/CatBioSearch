@@ -1,11 +1,28 @@
 const express = require("express");
 const router = express.Router();
 const initRelatorioModel = require('../models/Relatorio');
+const initRelatorioInsightModel = require('../models/RelatorioInsight');
+const { fetchLatestAnalysisSnapshot } = require('../services/analysisSnapshot');
+const { generateStructuredInsights } = require('../services/llmService');
 
 let Relatorio;
+let RelatorioInsight;
 
 const initializeRelatorioModel = async () => {
     Relatorio = await initRelatorioModel();
+};
+
+const initializeRelatorioInsightModel = async () => {
+    RelatorioInsight = await initRelatorioInsightModel();
+};
+
+const ensureModels = async () => {
+    if (!Relatorio) {
+        await initializeRelatorioModel();
+    }
+    if (!RelatorioInsight) {
+        await initializeRelatorioInsightModel();
+    }
 };
 
 const autenticacao = (req, res, next) => {
@@ -224,9 +241,103 @@ router.post('/relatorio/:id/resultado-pkd1', autenticacao, async (req, res) => {
     }
 });
 
+const parseJsonField = (value, fallback) => {
+    try {
+        return value ? JSON.parse(value) : fallback;
+    } catch (err) {
+        return fallback;
+    }
+};
+
+router.get('/relatorio/:id/insights', autenticacao, async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        await ensureModels();
+        const relatorio = await Relatorio.findByPk(id);
+        if (!relatorio) {
+            return res.status(404).json({ message: 'Relatório não encontrado.' });
+        }
+
+        const registro = await RelatorioInsight.findOne({ where: { RelatorioId: id } });
+        if (!registro) {
+            return res.status(404).json({ message: 'Insights ainda não foram gerados para este relatório.' });
+        }
+
+        return res.json({
+            relatorio_id: Number(id),
+            sections: parseJsonField(registro.sections_json, []),
+            insights_globais: parseJsonField(registro.insights_json, []),
+            possiveis_doencas: parseJsonField(registro.possiveis_doencas, []),
+            modelo: registro.modelo,
+            fonte_dados: registro.fonte_dados,
+            gerado_em: registro.gerado_em,
+        });
+    } catch (err) {
+        console.error('Erro ao buscar insights do relatório:', err.message);
+        return res.status(500).json({ message: 'Erro ao buscar insights.', detalhe: err.message });
+    }
+});
+
+router.post('/relatorio/:id/insights', autenticacao, async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        await ensureModels();
+        const relatorio = await Relatorio.findByPk(id);
+        if (!relatorio) {
+            return res.status(404).json({ message: 'Relatório não encontrado.' });
+        }
+
+        let snapshot;
+        try {
+            snapshot = await fetchLatestAnalysisSnapshot();
+        } catch (snapshotErr) {
+            const status = snapshotErr.status || 502;
+            return res.status(status).json({ message: snapshotErr.message });
+        }
+
+        let payload;
+        try {
+            payload = await generateStructuredInsights(relatorio, snapshot);
+        } catch (llmErr) {
+            console.error('Erro ao gerar insights LLM:', llmErr);
+            const status = llmErr.status || 500;
+            return res.status(status).json({ message: 'Falha ao gerar insights com o LLM.', detalhe: llmErr.message });
+        }
+
+        const registro = await RelatorioInsight.upsert({
+            RelatorioId: id,
+            sections_json: JSON.stringify(payload.sections || []),
+            insights_json: JSON.stringify(payload.insights_globais || []),
+            possiveis_doencas: JSON.stringify(payload.possiveis_doencas || []),
+            modelo: payload.modelo,
+            fonte_dados: payload.fonte_dados,
+            gerado_em: new Date(),
+        });
+
+        const meta = Array.isArray(registro) ? registro[0] : registro;
+
+        return res.json({
+            relatorio_id: Number(id),
+            sections: payload.sections || [],
+            insights_globais: payload.insights_globais || [],
+            possiveis_doencas: payload.possiveis_doencas || [],
+            modelo: payload.modelo,
+            fonte_dados: payload.fonte_dados,
+            gerado_em: meta?.gerado_em || new Date(),
+            persisted: true,
+        });
+    } catch (err) {
+        console.error('Erro inesperado ao gerar insights:', err);
+        return res.status(500).json({ message: 'Erro inesperado ao gerar insights.', detalhe: err.message });
+    }
+});
+
 
 
 // Inicializa os modelos ao carregar o roteador
 initializeRelatorioModel();
+initializeRelatorioInsightModel();
 
 module.exports = router;

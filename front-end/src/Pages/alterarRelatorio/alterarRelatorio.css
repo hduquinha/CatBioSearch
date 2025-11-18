@@ -27,6 +27,12 @@
   margin-bottom: 32px;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .edit-report-kicker {
   font-size: 12px;
   letter-spacing: 0.24em;
@@ -74,6 +80,25 @@
   color: var(--edit-primary);
 }
 
+.status-chip {
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.status-chip.success {
+  background: rgba(52, 211, 153, 0.2);
+  color: #047857;
+}
+
+.status-chip.warning {
+  background: rgba(251, 191, 36, 0.2);
+  color: #92400e;
+}
+
 .chip {
   display: inline-flex;
   align-items: center;
@@ -94,6 +119,49 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+}
+
+.form-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pill {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px dashed rgba(41, 41, 41, 0.25);
+  color: var(--edit-primary);
+}
+
+.pill.muted {
+  color: var(--edit-muted);
+  border-color: rgba(111, 111, 111, 0.3);
+}
+
+.form-section {
+  padding: 18px;
+  border-radius: 16px;
+  background: rgba(249, 249, 249, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.section-head h3 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--edit-primary);
+}
+
+.section-head p {
+  margin: 4px 0 0;
+  color: var(--edit-muted);
+  font-size: 13px;
 }
 
 .edit-report-grid {

@@ -21,6 +21,8 @@ services:
       DB_USER: root
       DB_PASSWORD: root
       DB_NAME: catsearch
+      GEMINI_API_KEY: "AIzaSyBbl5moM--m4i5JZY-m0IcsOJVexiQs4yw"
+      FASTA_SERVICE_URL: "http://back-end-fasta:5000"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:4000/health"]
       interval: 10s
@@ -36,7 +38,7 @@ services:
     environment:
       IA_HOST: ia
       ENABLE_LLM: "true"  # altere para "true" para ativar geração de resumo LLM
-      GEMINI_API_KEY: "${GEMINI_API_KEY}"   # defina via arquivo .env na raiz (não comitar)
+      GEMINI_API_KEY: "AIzaSyBbl5moM--m4i5JZY-m0IcsOJVexiQs4yw"
 
   ia:
     build: ./ia

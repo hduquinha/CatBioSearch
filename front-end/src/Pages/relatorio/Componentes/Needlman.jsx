@@ -1,88 +1,121 @@
 // src/components/NeedlemanWunsch.js
 import React, { useMemo } from "react";
-import './Needlman.css';
+import "./Needlman.css";
 
 const classify = (a, b) => {
-  if (a === '-' || b === '-') return 'gap';
-  if (a === b) return 'match';
-  return 'mismatch';
+  if (a === "-" || b === "-") return "gap";
+  if (a === b) return "match";
+  return "mismatch";
 };
 
-const sliceAround = (seq, centerIndex, radius) => {
+const buildColumns = (refSeq, querySeq, centerIndex, radius) => {
+  const length = Math.max(refSeq.length, querySeq.length);
   const start = Math.max(0, centerIndex - radius);
-  const end = Math.min(seq.length, centerIndex + radius + 1);
-  return { start, end, slice: seq.slice(start, end) };
-};
+  const end = Math.min(length, centerIndex + radius + 1);
+  const cols = [];
 
-const buildRows = (ref, qry, centerIndex, radius) => {
-  const { start, end } = sliceAround(ref, centerIndex, radius);
-  const refSlice = ref.slice(start, end);
-  const qrySlice = qry.slice(start, end);
-  const rows = [];
-  for (let i = 0; i < end - start; i++) {
-    const a = refSlice[i] || '-';
-    const b = qrySlice[i] || '-';
-    const globalIndex = start + i;
-    const type = classify(a, b);
-    const isMut = globalIndex === centerIndex;
-    rows.push({ a, b, type, isMut, idx: globalIndex });
+  for (let i = start; i < end; i += 1) {
+    const refBase = refSeq[i] || "-";
+    const sampleBase = querySeq[i] || "-";
+    cols.push({
+      idx: i,
+      refBase,
+      sampleBase,
+      type: classify(refBase, sampleBase),
+      isCenter: i === centerIndex,
+    });
   }
-  return rows;
+
+  return cols;
 };
 
-const NeedlemanWunsch = ({ refSeq = '', querySeq = '', variantes = [], windowRadius = 12, maxWindows = 4 }) => {
-  const windows = useMemo(() => {
-    const list = [];
-    if (variantes && variantes.length) {
-      for (let i = 0; i < Math.min(variantes.length, maxWindows); i++) {
-        const v = variantes[i] || {};
-        const center = Math.max(0, (v.posicao_exon || 1) - 1); // assumindo 1-based
-        list.push({ center, tipo: v.tipo || 'mutação' });
-      }
-    } else {
-      // fallback: centro da sequência
-      const center = Math.floor(Math.max(refSeq.length, querySeq.length) / 2);
-      list.push({ center, tipo: 'trecho' });
-    }
-    return list;
-  }, [variantes, refSeq, querySeq, maxWindows]);
+const buildWindows = (refSeq, querySeq, variantes, windowRadius, maxWindows) => {
+  const total = Math.max(refSeq.length, querySeq.length);
+  const fallbackCenter = Math.floor(total / 2) || 0;
+
+  const centers = (variantes || [])
+    .map((variant) =>
+      typeof variant?.posicao_exon === "number" ? Math.max(0, variant.posicao_exon - 1) : null
+    )
+    .filter((value) => value !== null);
+
+  const uniqueCenters = Array.from(new Set(centers)).slice(0, maxWindows);
+  if (!uniqueCenters.length) uniqueCenters.push(fallbackCenter);
+
+  return uniqueCenters.map((center, index) => {
+    const columns = buildColumns(refSeq, querySeq, center, windowRadius);
+    const rangeStart = columns[0]?.idx ?? center;
+    const rangeEnd = columns[columns.length - 1]?.idx ?? center;
+    return {
+      id: `window-${center}-${index}`,
+      center,
+      tipo: variantes[index]?.tipo || "mutação",
+      range: {
+        start: rangeStart + 1,
+        end: rangeEnd + 1,
+      },
+      columns,
+    };
+  });
+};
+
+const NeedlemanWunsch = ({
+  refSeq = "",
+  querySeq = "",
+  variantes = [],
+  windowRadius = 6,
+  maxWindows = 4,
+}) => {
+  const windows = useMemo(
+    () => buildWindows(refSeq, querySeq, variantes, windowRadius, maxWindows),
+    [refSeq, querySeq, variantes, windowRadius, maxWindows]
+  );
 
   return (
     <div className="needleman-container">
-      <h3>Alinhamento (janelas focadas em mutações)</h3>
-      {windows.map((w, wi) => {
-        const seg = buildRows(refSeq, querySeq, w.center, windowRadius);
-        return (
-          <div key={`win-${wi}`} className="win-block">
-            <div className="win-meta">
-              <span className="badge">{w.tipo}</span>
-              <span className="mut-pos">Posição ~ {w.center + 1}</span>
-              <span className="range">[{Math.max(1, w.center - windowRadius + 1)} - {Math.min(refSeq.length, w.center + windowRadius + 1)}]</span>
+      <div className="need-header">
+        <h3>Trechos focados em mutações</h3>
+        <p>Referência no topo, amostra logo abaixo para leitura rápida.</p>
+      </div>
+      <div className="alignment-windows">
+        {windows.map((window) => (
+          <article key={window.id} className="alignment-window">
+            <header className="win-meta">
+              <span className="badge">{window.tipo}</span>
+              <span className="mut-pos">Posição {window.center + 1}</span>
+              <span className="range">
+                {window.range.start} – {window.range.end}
+              </span>
+            </header>
+            <div className="stack-grid" role="list">
+              {window.columns.map((column) => (
+                <div
+                  key={`${window.id}-${column.idx}`}
+                  className={`stack-column ${column.type} ${column.isCenter ? "mut" : ""}`}
+                  role="listitem"
+                >
+                  <span className="stack-index">{column.idx + 1}</span>
+                  <span className="stack-base ref">{column.refBase}</span>
+                  <span className="stack-base sample">{column.sampleBase}</span>
+                </div>
+              ))}
             </div>
-            <div className="sequence-group">
-              <p>Referência</p>
-              <div className="sequence-row">
-                {seg.map(col => (
-                  <span key={`r-${wi}-${col.idx}`} className={`box ${col.isMut ? 'mut' : col.type === 'match' ? 'green' : col.type === 'gap' ? 'pink' : 'yellow'}`}>{col.a}</span>
-                ))}
-              </div>
-            </div>
-            <div className="sequence-group">
-              <p>Amostra</p>
-              <div className="sequence-row">
-                {seg.map(col => (
-                  <span key={`q-${wi}-${col.idx}`} className={`box ${col.isMut ? 'mut' : col.type === 'match' ? 'green' : col.type === 'gap' ? 'pink' : 'yellow'}`}>{col.b}</span>
-                ))}
-              </div>
-            </div>
-          </div>
-        );
-      })}
+          </article>
+        ))}
+      </div>
       <div className="legend">
-        <div className="legend-item"><span className="legend-color green"></span> Match</div>
-        <div className="legend-item"><span className="legend-color yellow"></span> Mismatch</div>
-        <div className="legend-item"><span className="legend-color pink"></span> Gap</div>
-        <div className="legend-item"><span className="legend-color mut"></span> Mutação</div>
+        <div className="legend-item">
+          <span className="legend-color green" /> Match
+        </div>
+        <div className="legend-item">
+          <span className="legend-color yellow" /> Mismatch
+        </div>
+        <div className="legend-item">
+          <span className="legend-color pink" /> Gap
+        </div>
+        <div className="legend-item">
+          <span className="legend-color mut" /> Mutação
+        </div>
       </div>
     </div>
   );

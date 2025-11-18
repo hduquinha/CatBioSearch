@@ -1,33 +1,112 @@
 /* Container principal */
 .proteins-container {
-    font-family: "Arial", sans-serif;
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    width: 100%;
-  }
-  
-  /* Título */
-  .proteins-container h3 {
-    font-size: 16px;
-    font-weight: bold;
-    color: #555;
-    margin-bottom: 10px;
-  }
-  
-  /* Lista */
-  .proteins-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-  
-  .proteins-list li {
-    font-size: 14px;
-    font-weight: normal;
-    color: #555;
-    margin-bottom: 5px;
-  }
+  background-color: #fff;
+  padding: 18px;
+  border-radius: 16px;
+  box-shadow: 0 12px 28px rgba(17, 24, 39, 0.08);
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.proteins-head h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #111827;
+}
+
+.proteins-head p {
+  margin: 4px 0 18px;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.proteins-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  justify-content: center;
+}
+
+.protein-card {
+  border-radius: 16px;
+  padding: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #f9fafb;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 240px;
+  margin: 0 auto;
+}
+
+.protein-card.match {
+  background: #eefdf5;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.protein-card.diff {
+  background: #fff1f2;
+  border-color: rgba(248, 113, 113, 0.4);
+}
+
+.protein-index {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.protein-pair {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.aa-pill {
+  flex: 1;
+  text-align: center;
+  border-radius: 10px;
+  padding: 10px 0;
+  font-weight: 700;
+  font-size: 18px;
+  color: #0f172a;
+  background: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.aa-pill.sample {
+  background: #111827;
+  color: #fff;
+}
+
+.protein-property {
+  margin: 0;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #64748b;
+}
+
+.protein-alert {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: #b91c1c;
+}
+
+.proteins-empty {
+  margin: 0;
+  color: #6b7280;
+  font-size: 14px;
+}
   

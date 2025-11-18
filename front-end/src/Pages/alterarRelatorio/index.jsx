@@ -21,6 +21,7 @@ const AlterarRelatorio = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const editing = Boolean(id);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -94,9 +95,14 @@ const AlterarRelatorio = () => {
               Atualize os dados clínicos do felino antes de gerar o laudo final.
             </p>
           </div>
-          <button className="ghost-button" onClick={() => navigate(-1)}>
-            Voltar
-          </button>
+          <div className="header-actions">
+            <span className={`status-chip ${editing ? "warning" : "success"}`}>
+              {editing ? "Edição" : "Novo"}
+            </span>
+            <button className="ghost-button" onClick={() => navigate(-1)}>
+              Voltar
+            </button>
+          </div>
         </header>
 
         <section className="edit-report-card">
@@ -111,85 +117,104 @@ const AlterarRelatorio = () => {
           {errorMessage && <p className="form-error">{errorMessage}</p>}
 
           <form onSubmit={handleSubmit} className="edit-report-form">
-            <div className="edit-report-grid">
-              <label className="edit-report-field">
-                <span>Nome *</span>
-                <input
-                  type="text"
-                  name="Nome"
-                  value={formData.Nome}
-                  onChange={handleInputChange}
-                  placeholder="Ex: Luna"
-                  required
-                />
-              </label>
+            <div className="form-pills">
+              <span className="pill">Registro #{id || "novo"}</span>
+              <span className="pill muted">Responsável: {formData.Cliente || "—"}</span>
+            </div>
 
-              <label className="edit-report-field">
-                <span>Raça *</span>
-                <input
-                  type="text"
-                  name="Raca"
-                  value={formData.Raca}
-                  onChange={handleInputChange}
-                  placeholder="Ex: Persa"
-                  required
-                />
-              </label>
+            <div className="form-section">
+              <div className="section-head">
+                <h3>Paciente</h3>
+                <p>Informações básicas sobre o felino.</p>
+              </div>
+              <div className="edit-report-grid">
+                <label className="edit-report-field">
+                  <span>Nome *</span>
+                  <input
+                    type="text"
+                    name="Nome"
+                    value={formData.Nome}
+                    onChange={handleInputChange}
+                    placeholder="Ex: Luna"
+                    required
+                  />
+                </label>
 
-              <label className="edit-report-field">
-                <span>Cliente *</span>
-                <input
-                  type="text"
-                  name="Cliente"
-                  value={formData.Cliente}
-                  onChange={handleInputChange}
-                  placeholder="Responsável pelo felino"
-                  required
-                />
-              </label>
+                <label className="edit-report-field">
+                  <span>Raça *</span>
+                  <input
+                    type="text"
+                    name="Raca"
+                    value={formData.Raca}
+                    onChange={handleInputChange}
+                    placeholder="Ex: Persa"
+                    required
+                  />
+                </label>
 
-              <label className="edit-report-field">
-                <span>Idade (anos)</span>
-                <input
-                  type="number"
-                  name="Idade"
-                  value={formData.Idade}
-                  onChange={handleInputChange}
-                  placeholder="Ex: 3"
-                  min="0"
-                />
-              </label>
+                <label className="edit-report-field">
+                  <span>Sexo</span>
+                  <select name="Sexo" value={formData.Sexo} onChange={handleInputChange}>
+                    <option value="">Selecione</option>
+                    <option value="Fêmea">Fêmea</option>
+                    <option value="Macho">Macho</option>
+                  </select>
+                </label>
 
-              <label className="edit-report-field">
-                <span>Sexo</span>
-                <select name="Sexo" value={formData.Sexo} onChange={handleInputChange}>
-                  <option value="">Selecione</option>
-                  <option value="Fêmea">Fêmea</option>
-                  <option value="Macho">Macho</option>
-                </select>
-              </label>
+                <label className="edit-report-field">
+                  <span>Idade (anos)</span>
+                  <input
+                    type="number"
+                    name="Idade"
+                    value={formData.Idade}
+                    onChange={handleInputChange}
+                    placeholder="Ex: 3"
+                    min="0"
+                  />
+                </label>
+              </div>
+            </div>
 
-              <label className="edit-report-field">
-                <span>Material coletado</span>
-                <input
-                  type="text"
-                  name="Material"
-                  value={formData.Material}
-                  onChange={handleInputChange}
-                  placeholder="Ex: Swab bucal"
-                />
-              </label>
+            <div className="form-section">
+              <div className="section-head">
+                <h3>Responsável & Procedimento</h3>
+                <p>Dados usados para rastreabilidade da amostra.</p>
+              </div>
+              <div className="edit-report-grid">
+                <label className="edit-report-field">
+                  <span>Cliente *</span>
+                  <input
+                    type="text"
+                    name="Cliente"
+                    value={formData.Cliente}
+                    onChange={handleInputChange}
+                    placeholder="Responsável pelo felino"
+                    required
+                  />
+                </label>
 
-              <label className="edit-report-field">
-                <span>Método</span>
-                <input
-                  type="text"
-                  name="Metodo"
-                  value={formData.Metodo}
-                  onChange={handleInputChange}
-                  placeholder="Ex: Sequenciamento"
-                />
-              </label>
+                <label className="edit-report-field">
+                  <span>Material coletado</span>
+                  <input
+                    type="text"
+                    name="Material"
+                    value={formData.Material}
+                    onChange={handleInputChange}
+                    placeholder="Ex: Swab bucal"
+                  />
+                </label>
+
+                <label className="edit-report-field">
+                  <span>Método</span>
+                  <input
+                    type="text"
+                    name="Metodo"
+                    value={formData.Metodo}
+                    onChange={handleInputChange}
+                    placeholder="Ex: Sequenciamento"
+                  />
+                </label>
+              </div>
             </div>
 
             <div className="edit-report-actions">
