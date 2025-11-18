@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import "./relatorios.css";
 import { FaEllipsisV } from "react-icons/fa";
 import Sidebar from "../../Components/Sidebar";
@@ -7,9 +8,10 @@ import axios from "../../api"; // Certifique-se que axios está configurado corr
 
 const HistoricoRelatorios = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [gatos, setGatos] = useState([]); // Estado para os dados
   const [loading, setLoading] = useState(true); // Estado de carregamento
-  const [error, setError] = useState(""); // Estado de erro
+  const [error, setError] = useState(false); // Estado de erro
   const [currentPage, setCurrentPage] = useState(1); // Página atual
   const itemsPerPage = 5; // Itens por página
   const [menuOpen, setMenuOpen] = useState(null); // Estado do menu
@@ -22,9 +24,10 @@ const HistoricoRelatorios = () => {
         const response = await axios.get("/relatorios/relatorios");
         console.log("Dados recebidos do backend:", response.data);
         setGatos(response.data.relatorios || []); // Atualiza o estado com os dados da API
+        setError(false);
       } catch (err) {
         console.error("Erro ao carregar dados:", err);
-        setError("Nenhum dado cadastrado.");
+        setError(true);
       } finally {
         setLoading(false); // Sempre desativa o carregamento
       }
@@ -35,14 +38,14 @@ const HistoricoRelatorios = () => {
 
   // Função para deletar um item
   const handleDelete = async (id) => {
-    if (window.confirm("Tem certeza que deseja excluir este registro?")) {
+    if (window.confirm(t('common.confirmDelete'))) {
       try {
         await axios.delete(`/relatorios/${id}`);
-        alert("Registro excluído com sucesso.");
+        alert(t('reportsHistory.deleteSuccess'));
         setGatos((prevGatos) => prevGatos.filter((gato) => gato.id !== id));
       } catch (err) {
         console.error("Erro ao excluir registro:", err);
-        alert("Erro ao excluir o registro. Tente novamente.");
+        alert(t('reportsHistory.deleteError'));
       } finally {
         setMenuOpen(null); // Fecha o menu após a ação
       }
@@ -70,33 +73,33 @@ const HistoricoRelatorios = () => {
     <div className="cats-page">
       <Sidebar />
       <header className="cats-header">
-        <h1 className="cats-title">Histórico de Relatórios</h1>
+        <h1 className="cats-title">{t('reportsHistory.title')}</h1>
         <div className="cats-actions">
-          <button className="export-button">Exportar</button>
+          <button className="export-button">{t('buttons.export')}</button>
           <button className="add-button" onClick={() => navigate("/passosAnalise/step1")}>
-            + Adicionar
+            + {t('buttons.add')}
           </button>
         </div>
       </header>
 
       <div className="table-container">
         {loading ? (
-          <p>Carregando...</p>
+          <p>{t('common.loading')}</p>
         ) : error ? (
-          <p>{error}</p>
+          <p>{t('reportsHistory.error')}</p>
         ) : gatos.length === 0 ? (
-          <p className="empty-message">Nenhum relatório disponível no momento.</p>
+          <p className="empty-message">{t('reportsHistory.empty')}</p>
         ) : (
           <>
             <table className="cats-table">
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Nome</th>
-                  <th>Raça</th>
-                  <th>Cliente</th>
-                  <th>Idade</th>
-                  <th>Ações</th>
+                  <th>{t('reportsHistory.tableHeaders.id')}</th>
+                  <th>{t('reportsHistory.tableHeaders.name')}</th>
+                  <th>{t('reportsHistory.tableHeaders.breed')}</th>
+                  <th>{t('reportsHistory.tableHeaders.client')}</th>
+                  <th>{t('reportsHistory.tableHeaders.age')}</th>
+                  <th>{t('reportsHistory.tableHeaders.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -121,19 +124,19 @@ const HistoricoRelatorios = () => {
                               className="edit"
                               onClick={() => navigate(`/alterarrelatorio/${gato.id}`)}
                             >
-                              Alterar
+                              {t('buttons.edit')}
                             </button>
                              <button
                               className="visualizar"
                               onClick={() => navigate(`/relatorio/analise/${gato.id}`)}
                             >
-                              Visualizar
+                              {t('buttons.view')}
                             </button>
                             <button
                               className="delete"
                               onClick={() => handleDelete(gato.id)}
                             >
-                              Excluir
+                              {t('buttons.delete')}
                             </button>
                           </div>
                         )}

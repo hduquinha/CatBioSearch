@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import api from "../../api"; // Certifique-se de que o caminho está correto
 import "./style.css";
 
+const NOT_REGISTERED_VALUE = "Não";
+
 const Cadastro = () => {
+    const { t } = useTranslation();
     const [currentStep, setCurrentStep] = useState(1);
     const [formData, setFormData] = useState({
         nomeGato: "",
@@ -14,7 +18,7 @@ const Cadastro = () => {
         telefoneClinica: "",
         emailClinica: "",
         enderecoClinica: "",
-        clienteCadastrado: "Não",
+        clienteCadastrado: NOT_REGISTERED_VALUE,
         materialGenetico: "",
         sequenciamento: "",
         arquivo: null,
@@ -137,7 +141,7 @@ const Cadastro = () => {
     return (
         <div className="cadastro-container">
             <div className="progress-bar">
-                {["Passo 1", "Passo 2", "Passo 3"].map((step, index) => (
+                {t("analysisSteps.steps", { returnObjects: true }).map((step, index) => (
                     <div
                         key={index}
                         className={`progress-step ${
@@ -156,10 +160,10 @@ const Cadastro = () => {
             <form className="form-container" onSubmit={(e) => e.preventDefault()}>
                 {currentStep === 1 && (
                     <div className="form-step">
-                        <h2>Informações Básicas do Gato</h2>
+                        <h2>{t("analysisSteps.sections.basicInfo")}</h2>
                         <div className="form-row">
                             <label>
-                                Nome:
+                                {t("analysisSteps.fields.catName")}:
                                 <input
                                     type="text"
                                     name="nomeGato"
@@ -168,7 +172,7 @@ const Cadastro = () => {
                                 />
                             </label>
                             <label>
-                                Raça:
+                                {t("analysisSteps.fields.breed")}:
                                 <input
                                     type="text"
                                     name="racaGato"
@@ -179,7 +183,7 @@ const Cadastro = () => {
                         </div>
                         <div className="form-row">
                             <label>
-                                Idade:
+                                {t("analysisSteps.fields.age")}:
                                 <input
                                     type="number"
                                     name="idadeGato"
@@ -188,15 +192,15 @@ const Cadastro = () => {
                                 />
                             </label>
                             <label>
-                                Sexo:
+                                {t("analysisSteps.fields.sex")}:
                                 <select
                                     name="sexoGato"
                                     value={formData.sexoGato}
                                     onChange={handleChange}
                                 >
-                                    <option value="">Selecione</option>
-                                    <option value="Macho">Macho</option>
-                                    <option value="Fêmea">Fêmea</option>
+                                    <option value="">{t("analysisSteps.placeholders.select")}</option>
+                                    <option value="Macho">{t("analysisSteps.options.male")}</option>
+                                    <option value="Fêmea">{t("analysisSteps.options.female")}</option>
                                 </select>
                             </label>
                         </div>
@@ -205,66 +209,66 @@ const Cadastro = () => {
                             className="nav-button back-home"
                             onClick={() => navigate("/")}
                         >
-                            Voltar
+                            {t("analysisSteps.buttons.backHome")}
                         </button>
                     </div>
                 )}
 
                 {currentStep === 2 && (
                     <div className="form-step">
-                        <h2>Informações da Clínica Veterinária</h2>
+                        <h2>{t("analysisSteps.sections.clinicInfo")}</h2>
                         <div className="form-row">
                             <label>
-                                Nome da Empresa:
+                                {t("analysisSteps.fields.company")}:
                                 <input
                                     type="text"
                                     name="nomeClinica"
                                     value={formData.nomeClinica}
                                     onChange={handleChange}
-                                    disabled={formData.clienteCadastrado !== "Não"}
+                                    disabled={formData.clienteCadastrado !== NOT_REGISTERED_VALUE}
                                 />
                             </label>
                             <label>
-                                Telefone:
+                                {t("analysisSteps.fields.phone")}:
                                 <input
                                     type="tel"
                                     name="telefoneClinica"
                                     value={formData.telefoneClinica}
                                     onChange={handleChange}
-                                    disabled={formData.clienteCadastrado !== "Não"}
+                                    disabled={formData.clienteCadastrado !== NOT_REGISTERED_VALUE}
                                 />
                             </label>
                         </div>
                         <div className="form-row">
                             <label>
-                                Email:
+                                {t("analysisSteps.fields.email")}:
                                 <input
                                     type="email"
                                     name="emailClinica"
                                     value={formData.emailClinica}
                                     onChange={handleChange}
-                                    disabled={formData.clienteCadastrado !== "Não"}
+                                    disabled={formData.clienteCadastrado !== NOT_REGISTERED_VALUE}
                                 />
                             </label>
                             <label>
-                                Endereço:
+                                {t("analysisSteps.fields.address")}:
                                 <input
                                     type="text"
                                     name="enderecoClinica"
                                     value={formData.enderecoClinica}
                                     onChange={handleChange}
-                                    disabled={formData.clienteCadastrado !== "Não"}
+                                    disabled={formData.clienteCadastrado !== NOT_REGISTERED_VALUE}
                                 />
                             </label>
                         </div>
                         <label>
-                            Já é cadastrado?
+                            {t("analysisSteps.fields.isRegistered")}?
                             <select
                                 name="clienteCadastrado"
                                 value={formData.clienteCadastrado}
                                 onChange={handleChange}
                             >
-                                <option value="Não">Não</option>
+                                <option value={NOT_REGISTERED_VALUE}>{t("analysisSteps.options.notRegistered")}</option>
                                 {veterinarios.map((vet) => (
                                     <option key={vet.id} value={vet.Nome}>
                                         {vet.Nome}
@@ -277,9 +281,9 @@ const Cadastro = () => {
 
                 {currentStep === 3 && (
                     <div className="form-step">
-                        <h2>Sobre a Análise</h2>
+                        <h2>{t("analysisSteps.sections.analysisInfo")}</h2>
                         <label>
-                            Material Genético:
+                            {t("analysisSteps.fields.geneticMaterial")}:
                             <input
                                 type="text"
                                 name="materialGenetico"
@@ -288,7 +292,7 @@ const Cadastro = () => {
                             />
                         </label>
                         <label>
-                            Sequenciamento:
+                            {t("analysisSteps.fields.sequencing")}:
                             <input
                                 type="text"
                                 name="sequenciamento"
@@ -302,7 +306,7 @@ const Cadastro = () => {
                                 onChange={handleFileChange}
                             />
                             <span>
-                                {formData.arquivo ? formData.arquivo.name : "Escolha um arquivo"}
+                                {formData.arquivo ? formData.arquivo.name : t("analysisSteps.placeholders.file")}
                             </span>
                         </label>
                     </div>
@@ -311,16 +315,16 @@ const Cadastro = () => {
                 <div className="nav-buttons">
                     {currentStep > 1 && (
                         <button type="button" onClick={prevStep} className="nav-button">
-                            Anterior
+                            {t("analysisSteps.buttons.previous")}
                         </button>
                     )}
                     {currentStep < 3 ? (
                         <button type="button" onClick={nextStep} className="nav-button next">
-                            Próximo
+                            {t("analysisSteps.buttons.next")}
                         </button>
                     ) : (
                         <button type="submit" onClick={handleSubmit} className="nav-button finalizar">
-                            Finalizar
+                            {t("analysisSteps.buttons.finish")}
                         </button>
                     )}
                 </div>

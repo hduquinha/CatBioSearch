@@ -1,6 +1,7 @@
 // src/components/NeedlemanWunsch.js
 import React, { useMemo } from "react";
 import "./Needlman.css";
+import { useTranslation } from "react-i18next";
 
 const classify = (a, b) => {
   if (a === "-" || b === "-") return "gap";
@@ -29,7 +30,7 @@ const buildColumns = (refSeq, querySeq, centerIndex, radius) => {
   return cols;
 };
 
-const buildWindows = (refSeq, querySeq, variantes, windowRadius, maxWindows) => {
+const buildWindows = (refSeq, querySeq, variantes, windowRadius, maxWindows, fallbackType) => {
   const total = Math.max(refSeq.length, querySeq.length);
   const fallbackCenter = Math.floor(total / 2) || 0;
 
@@ -49,7 +50,7 @@ const buildWindows = (refSeq, querySeq, variantes, windowRadius, maxWindows) => 
     return {
       id: `window-${center}-${index}`,
       center,
-      tipo: variantes[index]?.tipo || "mutação",
+      tipo: variantes[index]?.tipo || fallbackType,
       range: {
         start: rangeStart + 1,
         end: rangeEnd + 1,
@@ -66,23 +67,25 @@ const NeedlemanWunsch = ({
   windowRadius = 6,
   maxWindows = 4,
 }) => {
+  const { t } = useTranslation();
+  const fallbackType = t("reportDetail.alignment.fallbackType");
   const windows = useMemo(
-    () => buildWindows(refSeq, querySeq, variantes, windowRadius, maxWindows),
-    [refSeq, querySeq, variantes, windowRadius, maxWindows]
+    () => buildWindows(refSeq, querySeq, variantes, windowRadius, maxWindows, fallbackType),
+    [refSeq, querySeq, variantes, windowRadius, maxWindows, fallbackType]
   );
 
   return (
     <div className="needleman-container">
       <div className="need-header">
-        <h3>Trechos focados em mutações</h3>
-        <p>Referência no topo, amostra logo abaixo para leitura rápida.</p>
+        <h3>{t("reportDetail.alignment.windowTitle")}</h3>
+        <p>{t("reportDetail.alignment.windowSubtitle")}</p>
       </div>
       <div className="alignment-windows">
         {windows.map((window) => (
           <article key={window.id} className="alignment-window">
             <header className="win-meta">
               <span className="badge">{window.tipo}</span>
-              <span className="mut-pos">Posição {window.center + 1}</span>
+              <span className="mut-pos">{t("reportDetail.alignment.position", { value: window.center + 1 })}</span>
               <span className="range">
                 {window.range.start} – {window.range.end}
               </span>
@@ -105,16 +108,16 @@ const NeedlemanWunsch = ({
       </div>
       <div className="legend">
         <div className="legend-item">
-          <span className="legend-color green" /> Match
+          <span className="legend-color green" /> {t("reportDetail.alignment.legend.match")}
         </div>
         <div className="legend-item">
-          <span className="legend-color yellow" /> Mismatch
+          <span className="legend-color yellow" /> {t("reportDetail.alignment.legend.mismatch")}
         </div>
         <div className="legend-item">
-          <span className="legend-color pink" /> Gap
+          <span className="legend-color pink" /> {t("reportDetail.alignment.legend.gap")}
         </div>
         <div className="legend-item">
-          <span className="legend-color mut" /> Mutação
+          <span className="legend-color mut" /> {t("reportDetail.alignment.legend.mutation")}
         </div>
       </div>
     </div>

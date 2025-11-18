@@ -22,7 +22,7 @@ const initRelatorioModel = async () =>{
         },
         Idade:{
             type: Sequelize.INTEGER,
-            allowNull: false
+            allowNull: true
         },
         Raca:{
             type: Sequelize.STRING,

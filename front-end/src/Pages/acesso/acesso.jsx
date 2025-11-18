@@ -1,6 +1,7 @@
 // src/pages/AcessoPage.js
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import "./acesso.css";
 import { FaEllipsisV } from "react-icons/fa";
 import Sidebar from "../../Components/Sidebar";
@@ -8,6 +9,7 @@ import axios from "../../api";
 
 const AcessoPage = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -22,7 +24,7 @@ const AcessoPage = () => {
         setUsuarios(response.data.usuarios);
         setLoading(false);
       } catch (err) {
-        setError("Erro ao carregar dados.");
+        setError(t('common.error'));
         setLoading(false);
       }
     };
@@ -38,20 +40,20 @@ const AcessoPage = () => {
   };
 
   const handleEdit = (id) => {
-    alert(`Editar usuário com ID: ${id}`);
+    alert(`${t('buttons.edit')} ID: ${id}`);
     setMenuOpen(null); // Fecha o menu após a ação
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Tem certeza que deseja excluir este usuário?")) {
+    if (window.confirm(t('common.confirmDelete'))) {
       try {
         const response = await axios.delete(`/users/admin-usuario/${id}`);
-        alert(response.data.message); // Exibe a mensagem de sucesso
+        alert(response.data.message || t('users.deleteSuccess'));
 
         // Atualiza a lista de usuários após a exclusão
         setUsuarios(usuarios.filter((usuario) => usuario.id !== id));
       } catch (error) {
-        alert("Erro ao excluir usuário.");
+        alert(t('users.deleteError'));
       }
     }
     setMenuOpen(null); // Fecha o menu após a ação
@@ -62,21 +64,21 @@ const AcessoPage = () => {
     currentPage * itemsPerPage
   );
 
-  if (loading) return <p>Carregando...</p>;
+  if (loading) return <p>{t('common.loading')}</p>;
   if (error) return <p>{error}</p>;
 
   return (
     <div className="cats-page">
       <Sidebar />
       <header className="cats-header">
-        <h1 className="cats-title">Usuários</h1>
+        <h1 className="cats-title">{t('users.title')}</h1>
         <div className="cats-actions">
-          <button className="export-button">Exportar</button>
+          <button className="export-button">{t('buttons.export')}</button>
           <button
             className="add-button"
             onClick={() => navigate("/criarusuario")}
           >
-            + Adicionar
+            {t('users.add')}
           </button>
         </div>
       </header>
@@ -85,12 +87,12 @@ const AcessoPage = () => {
         <table className="cats-table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Nome</th>
-              <th>Usuário</th>
-              <th>Ativo</th>
-              <th>Nascimento</th>
-              <th>Ações</th>
+              <th>{t('users.tableHeaders.id')}</th>
+              <th>{t('users.tableHeaders.name')}</th>
+              <th>{t('users.tableHeaders.username')}</th>
+              <th>{t('users.tableHeaders.active')}</th>
+              <th>{t('users.tableHeaders.birth')}</th>
+              <th>{t('users.tableHeaders.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -100,7 +102,7 @@ const AcessoPage = () => {
                   <td className="inicio">#{usuario.id}</td>
                   <td className="meio">{usuario.Nome}</td>
                   <td className="meio">{usuario.Login}</td>
-                  <td className="meio">{usuario.Ativo ? "Sim" : "Não"}</td>
+                  <td className="meio">{usuario.Ativo ? t('common.yes') : t('common.no')}</td>
                   <td className="meio">{usuario.Nascimento}</td>
                   <td className="fim">
                     <div className="actions-menu-container">
@@ -116,13 +118,13 @@ const AcessoPage = () => {
                             className="edit"
                             onClick={() => navigate(`/alterarusuario/${usuario.id}`)}
                           >
-                            Alterar
+                            {t('buttons.edit')}
                           </button>
                           <button
                             className="delete"
                             onClick={() => handleDelete(usuario.id)}
                           >
-                            Excluir
+                            {t('buttons.delete')}
                           </button>
                         </div>
                       )}
@@ -132,7 +134,7 @@ const AcessoPage = () => {
               ))
             ) : (
               <tr>
-                <td colSpan="6" className="empty-row">Nenhum dado disponível.</td>
+                <td colSpan="6" className="empty-row">{t('users.empty')}</td>
               </tr>
             )}
           </tbody>

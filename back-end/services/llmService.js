@@ -27,6 +27,10 @@ const buildBaseSections = (relatorio = {}, analise = {}) => {
   const classificacao = relatorio.Classificacao || analise.classificacao || "Indefinido";
   const confianca = relatorio.Confianca || analise.confianca || analise.confianca_float || null;
   const metricas = analise.metricas_exon29 || {};
+  const variantes = Array.isArray(analise.variantes_exon29) ? analise.variantes_exon29 : [];
+  const resumoVariantes = summarizeVariants(variantes);
+  const cobertura = metricas.cobertura_pct ?? null;
+  const totalMutacoes = variantes.length;
 
   return [
     {
@@ -56,6 +60,27 @@ const buildBaseSections = (relatorio = {}, analise = {}) => {
       valor: score,
       probabilidade: safeNumber(metricas.cobertura_pct),
       contexto: `Cobertura estimada do exon29: ${metricas.cobertura_pct || "N/D"}%. Variantes: ${metricas.total_variantes || 0}.`
+    },
+    {
+      id: "alignmentDetail",
+      titulo: "Trechos focados em mutação",
+      valor: totalMutacoes ? `${totalMutacoes} variação(ões) monitorada(s)` : "Sem mutações relevantes",
+      probabilidade: safeNumber(metricas.cobertura_pct),
+      contexto: `Explique o que o score ${score} e a cobertura ${cobertura ?? "N/D"}% indicam para o alinhamento Needleman-Wunsch e descreva as consequências clínicas das mutações: ${resumoVariantes}.`
+    },
+    {
+      id: "rnaFocus",
+      titulo: "Transcrição em destaque",
+      valor: totalMutacoes ? "Transcritos afetados" : "Transcrição preservada",
+      probabilidade: null,
+      contexto: `Comente em duas ou três frases como as mutações afetam a transcrição do exon29, citando códons alterados, potenciais mudanças de RNA mensageiro e recomendações práticas.`
+    },
+    {
+      id: "proteinMap",
+      titulo: "Mapa de aminoácidos",
+      valor: totalMutacoes ? "Aminoácidos alterados" : "Sem alterações detectadas",
+      probabilidade: null,
+      contexto: `Resuma o possível impacto proteico: destaque se há risco de stop codon, substituições críticas ou manutenção estrutural com base nas variantes (${resumoVariantes}).`
     }
   ];
 };
@@ -85,9 +110,10 @@ Responda estritamente no formato JSON a seguir, sem texto adicional:
 }
 
 Regras:
-- Use no máximo 2 frases por comentário.
+- Use 2 ou 3 frases por comentário, sempre relacionando os valores fornecidos (score, probabilidade, mutações) a interpretações clínicas.
 - Utilize tom clínico objetivo, cite probabilidades quando disponíveis e recomende próximos passos em linguagem simples.
 - Quando não houver dado, escreva "Informação insuficiente".
+- Para alignmentDetail, descreva o que o score/cobertura sugerem e como as mutações afetam o alinhamento. Para rnaFocus e proteinMap, destaque consequências sobre transcrição e aminoácidos de forma educativa.
 
 Dados de entrada:
 ${JSON.stringify(payload, null, 2)}

@@ -1,93 +1,124 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Bar } from "react-chartjs-2";
 import { useInView } from "react-intersection-observer";
 import { Chart as ChartJS, BarElement, CategoryScale, LinearScale, Tooltip, Legend } from "chart.js";
-import api from '../../../api';
+import { useTranslation } from "react-i18next";
+import api from "../../../api";
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
-const monthNames = [
-  'Janeiro','Fevereiro','Março','Abril','Maio','Junho',
-  'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'
+const MONTH_FALLBACK = [
+  "Janeiro",
+  "Fevereiro",
+  "Março",
+  "Abril",
+  "Maio",
+  "Junho",
+  "Julho",
+  "Agosto",
+  "Setembro",
+  "Outubro",
+  "Novembro",
+  "Dezembro",
 ];
 
+const MONTH_KEYS = [
+  "jan",
+  "feb",
+  "mar",
+  "apr",
+  "may",
+  "jun",
+  "jul",
+  "aug",
+  "sep",
+  "oct",
+  "nov",
+  "dec",
+];
+
+const buildLastMonths = () => {
+  const now = new Date();
+  const indexes = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    indexes.push(d.getMonth());
+  }
+  return indexes;
+};
+
 const ReportsChart = () => {
+  const { t } = useTranslation();
   const { ref, inView } = useInView({ triggerOnce: true });
   const [animate, setAnimate] = useState(false);
-  // Gera rótulos dos últimos 12 meses no formato NomeMes/AA (ex: Nov/25)
-  const getInitialMonthLabels = () => {
-    const now = new Date();
-    const arr = [];
-    for (let i = 11; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      // Apenas o nome do mês (sem o ano)
-      arr.push(`${monthNames[d.getMonth()]}`);
-    }
-    return arr;
-  };
-
-  const [labels, setLabels] = useState(getInitialMonthLabels());
+  const [monthIndexes, setMonthIndexes] = useState(buildLastMonths());
   const [counts, setCounts] = useState(new Array(12).fill(0));
 
   if (inView && !animate) {
     setAnimate(true); // Ativa a animação apenas ao entrar na tela
   }
+  const translateMonth = (index) => {
+    const key = MONTH_KEYS[index] || null;
+    if (key) {
+      const translated = t(`charts.reportsByMonth.months.${key}`);
+      if (translated && translated !== `charts.reportsByMonth.months.${key}`) {
+        return translated;
+      }
+    }
+    return MONTH_FALLBACK[index] || MONTH_FALLBACK[0];
+  };
 
   useEffect(() => {
     const fetchMonthly = async () => {
       try {
-        const res = await api.get('/home/menu');
+        const res = await api.get("/home/menu");
         const monthly = res.data.monthlyCounts || [];
 
-        // Se o backend não retornar dados (array vazio), mantemos os rótulos iniciais e zeros
         if (!Array.isArray(monthly) || monthly.length === 0) {
-          setLabels(getInitialMonthLabels());
+          setMonthIndexes(buildLastMonths());
           setCounts(new Array(12).fill(0));
           return;
         }
 
-        // monthly vem no formato [{ month: 'YYYY-MM', count: N }, ...]
-        const safeLabels = [];
+        const safeIndexes = [];
         const safeCounts = [];
-        monthly.forEach(item => {
+        monthly.forEach((item) => {
           if (!item || !item.month) return;
-          const parts = String(item.month).split('-');
+          const parts = String(item.month).split("-");
           if (parts.length !== 2) return;
-          const year = Number(parts[0]);
           const monthNum = Number(parts[1]);
-          const monthName = monthNames[monthNum - 1] || `M${monthNum}`;
-          // Apenas o nome do mês, sem o ano
-          safeLabels.push(`${monthName}`);
+          if (Number.isNaN(monthNum)) return;
+          safeIndexes.push(Math.max(0, Math.min(11, monthNum - 1)));
           safeCounts.push(Number(item.count) || 0);
         });
 
-        // Se por algum motivo não gerou labels, manter os iniciais
-        if (safeLabels.length === 0) {
-          setLabels(getInitialMonthLabels());
+        if (safeIndexes.length === 0) {
+          setMonthIndexes(buildLastMonths());
           setCounts(new Array(12).fill(0));
         } else {
-          setLabels(safeLabels);
+          setMonthIndexes(safeIndexes);
           setCounts(safeCounts);
         }
       } catch (err) {
-        console.error('Erro ao buscar dados do gráfico:', err);
-        // Em caso de erro, manter um fallback
-        const fallbackLabels = ['Jan','Fev','Mar','Abr','Mai'];
-        setLabels(fallbackLabels);
-        setCounts([0,0,0,0,0]);
+        console.error("Erro ao buscar dados do gráfico:", err);
+        setMonthIndexes([0, 1, 2, 3, 4]);
+        setCounts([0, 0, 0, 0, 0]);
       }
     };
 
     fetchMonthly();
   }, []);
 
+  const labels = useMemo(() => monthIndexes.map((idx) => translateMonth(idx)), [monthIndexes, t]);
+  const datasetValues = animate && counts.length ? counts : counts.map(() => 0);
+
   const data = {
-    labels: labels.length ? labels : ['Carregando...'],
+    labels: labels.length ? labels : [t("common.loading")],
     datasets: [
       {
-        label: 'Relatórios gerados por mês',
-        data: animate && counts.length ? counts : counts.map(() => 0),
-        backgroundColor: 'rgba(255, 193, 7, 0.8)',
+        label: t("charts.reportsByMonth.dataset"),
+        data: datasetValues,
+        backgroundColor: "rgba(255, 193, 7, 0.8)",
         borderWidth: 1,
       },
     ],
@@ -117,7 +148,7 @@ const ReportsChart = () => {
       ref={ref}
       style={{ width: '100%', maxWidth: '70rem', margin: '0 auto', padding: '20px', backgroundColor: '#f4f4f4', borderRadius: '12px' }}
     >
-      <h3 style={{ textAlign: 'center', marginBottom: '20px', color: '#6F6F6F' }}>Relatórios gerados por mês</h3>
+      <h3 style={{ textAlign: "center", marginBottom: "20px", color: "#6F6F6F"}}>{t("charts.reportsByMonth.title")}</h3>
       <Bar data={data} options={options} />
     </div>
   );

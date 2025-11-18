@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import "./cadastro.css";
 import { FaEllipsisV } from "react-icons/fa";
 import Sidebar from "../../Components/Sidebar";
@@ -7,9 +8,10 @@ import axios from "../../api";
 
 const CatsPage = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [clinicas, setClinicas] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5; // Quantidade de itens por página
   const [menuOpen, setMenuOpen] = useState(null); // Controla qual menu está aberto
@@ -22,7 +24,7 @@ const CatsPage = () => {
         setClinicas(response.data.veterinarios);
         setLoading(false);
       } catch (err) {
-        setError("Erro ao carregar dados.");
+        setError(true);
         setLoading(false);
       }
     };
@@ -31,10 +33,10 @@ const CatsPage = () => {
 
   // Função para deletar um cliente
   const handleDelete = async (id) => {
-    if (window.confirm("Tem certeza que deseja excluir este cliente?")) {
+    if (window.confirm(t("clientsPage.confirmDelete"))) {
       try {
         await axios.delete(`/vet/${id}`); // Chama a rota DELETE da API
-        alert("Cliente excluído com sucesso.");
+        alert(t("clientsPage.deleteSuccess"));
 
         // Atualiza a lista de clientes após a exclusão
         setClinicas((prevClinicas) =>
@@ -42,7 +44,7 @@ const CatsPage = () => {
         );
       } catch (err) {
         console.error("Erro ao excluir cliente:", err);
-        alert("Erro ao excluir o cliente. Tente novamente.");
+        alert(t("clientsPage.deleteError"));
       }
     }
     setMenuOpen(null); // Fecha o menu após a ação
@@ -63,21 +65,21 @@ const CatsPage = () => {
     currentPage * itemsPerPage
   );
 
-  if (loading) return <p>Carregando...</p>;
-  if (error) return <p>{error}</p>;
+  if (loading) return <p>{t("common.loading")}</p>;
+  if (error) return <p>{t("clientsPage.loadError")}</p>;
 
   return (
     <div className="cats-page">
       <Sidebar />
       <header className="cats-header">
-        <h1 className="cats-title">Clientes Cadastrados</h1>
+        <h1 className="cats-title">{t("clientsPage.title")}</h1>
         <div className="cats-actions">
-          <button className="export-button">Exportar</button>
+          <button className="export-button">{t("buttons.export")}</button>
           <button
             className="add-button"
             onClick={() => navigate("/criarcliente")}
           >
-            + Adicionar
+            + {t("buttons.add")}
           </button>
         </div>
       </header>
@@ -86,12 +88,12 @@ const CatsPage = () => {
         <table className="cats-table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Nome da Empresa</th>
-              <th>Endereço</th>
-              <th>E-mail</th>
-              <th>Telefone</th>
-              <th>Ações</th>
+              <th>{t("clientsPage.tableHeaders.id")}</th>
+              <th>{t("clientsPage.tableHeaders.company")}</th>
+              <th>{t("clientsPage.tableHeaders.address")}</th>
+              <th>{t("clientsPage.tableHeaders.email")}</th>
+              <th>{t("clientsPage.tableHeaders.phone")}</th>
+              <th>{t("clientsPage.tableHeaders.actions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -136,7 +138,7 @@ const CatsPage = () => {
             ) : (
               <tr>
                 <td colSpan="6" className="empty-row">
-                  Nenhum dado disponível.
+                  {t("clientsPage.empty")}
                 </td>
               </tr>
             )}

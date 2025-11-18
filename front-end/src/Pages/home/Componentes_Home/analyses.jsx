@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const LastAnalyses = () => {
     const [analyses, setAnalyses] = useState([]); // Armazena todas as análises
     const [loading, setLoading] = useState(true); // Indica se está carregando
     const navigate = useNavigate(); // Hook para navegação
+    const { t, i18n } = useTranslation();
+    const locale = useMemo(() => (i18n.language === "pt" ? "pt-BR" : "en-US"), [i18n.language]);
 
     // Simula uma API para obter análises
     const fetchAnalyses = async () => {
@@ -33,14 +36,14 @@ const LastAnalyses = () => {
     };
 
     if (loading) {
-        return <p>Carregando análises...</p>;
+        return <p>{t("homeWidgets.lastAnalyses.loading")}</p>;
     }
 
     return (
         <div style={{ padding: "20px", maxWidth: "500px", margin: "0 auto" }}>
-            <h2 style={{ fontSize: "24px", marginBottom: "10px", color: "#6F6F6F" }}>Últimas Análises</h2>
+            <h2 style={{ fontSize: "24px", marginBottom: "10px", color: "#6F6F6F" }}>{t("homeWidgets.lastAnalyses.title")}</h2>
             <p style={{ fontSize: "14px", color: "#6F6F6F" }}>
-                {new Date().toLocaleDateString("pt-BR")}
+                {t("homeWidgets.lastAnalyses.subtitle", { date: new Date().toLocaleDateString(locale) })}
             </p>
             
             <div style={{ marginTop: "20px" }}>

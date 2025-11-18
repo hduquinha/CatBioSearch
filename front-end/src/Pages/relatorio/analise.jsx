@@ -1,5 +1,5 @@
 // src/pages/AnalysisPage.js
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./analise.css";
 import Sidebar from "../../Components/Sidebar";
 import RNASequence from "./Componentes/RNASequence";
@@ -7,8 +7,7 @@ import NeedlemanWunsch from "./Componentes/Needlman";
 import Proteins from "./Componentes/Protein";
 import api, { fasta } from "../../api";
 import { jsPDF } from "jspdf";
-
-const mapaClassificacao = { 0: "Risco Baixo", 1: "Risco Alto" };
+import { useTranslation } from "react-i18next";
 
 const formatProbability = (value) => {
   if (value === null || value === undefined) return null;
@@ -16,6 +15,18 @@ const formatProbability = (value) => {
   if (!Number.isFinite(number)) return null;
   if (number <= 1) return `${(number * 100).toFixed(1)}%`;
   return `${number.toFixed(1)}%`;
+};
+
+const getRiskLabel = (classification, t) => {
+  if (classification === 1) return t("reportDetail.riskLevels.high");
+  if (classification === 0) return t("reportDetail.riskLevels.low");
+  return t("reportDetail.riskLevels.unknown");
+};
+
+const getRiskHelper = (classification, t) => {
+  if (classification === 1) return t("reportDetail.summary.cards.risk.helper.high");
+  if (classification === 0) return t("reportDetail.summary.cards.risk.helper.low");
+  return t("reportDetail.summary.cards.risk.helper.awaiting");
 };
 
 const CODON_TABLE = {
@@ -96,15 +107,25 @@ const splitCodons = (seq = "") => {
 const translateCodons = (codons = []) => codons.map((codon) => CODON_TABLE[codon] || "");
 
 const Relatorio = () => {
+  const { t, i18n } = useTranslation();
   const [relatorio, setRelatorio] = useState(null);
   const [dadosAnalise, setDadosAnalise] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(false);
   const [llmSections, setLlmSections] = useState([]);
   const [llmInsights, setLlmInsights] = useState([]);
   const [llmMeta, setLlmMeta] = useState(null);
   const [llmLoading, setLlmLoading] = useState(true);
   const [llmError, setLlmError] = useState("");
+  const [emailStatus, setEmailStatus] = useState("idle");
+  const emailTimeoutRef = useRef(null);
+  const locale = useMemo(() => (i18n.language === "pt" ? "pt-BR" : "en-US"), [i18n.language]);
+
+  useEffect(() => () => {
+    if (emailTimeoutRef.current) {
+      clearTimeout(emailTimeoutRef.current);
+    }
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -133,12 +154,12 @@ const Relatorio = () => {
           } catch (generateErr) {
             if (!cancelled) {
               console.error("Erro ao gerar insights LLM:", generateErr);
-              setLlmError("Não foi possível gerar os complementos do LLM.");
+              setLlmError(t("reportDetail.errors.llmGenerate"));
             }
           }
         } else if (!cancelled) {
           console.error("Erro ao buscar insights LLM:", err);
-          setLlmError("Não foi possível carregar os complementos do LLM.");
+          setLlmError(t("reportDetail.errors.llmLoad"));
         }
       } finally {
         if (!cancelled) setLlmLoading(false);
@@ -172,7 +193,7 @@ const Relatorio = () => {
         }
       } catch (err) {
         console.error("Erro ao carregar dados:", err);
-        setError("Erro ao carregar dados do relatório");
+        setError(true);
       } finally {
         if (!cancelled) {
           setLoading(false);
@@ -183,36 +204,32 @@ const Relatorio = () => {
 
     fetchData();
     return () => { cancelled = true; };
-  }, []);
+  }, [t]);
 
   const downloadPDF = () => {
     const doc = new jsPDF();
-    // Configurações do PDF
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
-    // Cabeçalho
     doc.setFontSize(16);
-    doc.text("Relatório Genético Completo", 10, 20);
+    doc.text(t("reportDetail.pdf.title"), 10, 20);
     doc.setFontSize(12);
-    // Informações do Animal
-    doc.text(`Nome: ${relatorio?.Nome || "Não informado"}`, 10, 35);
-    doc.text(`ID do Relatório: ${relatorio?.id || "N/A"}`, 10, 45);
-    // Dados da Análise
+    doc.text(`${t("reportDetail.pdf.animalName")}: ${relatorio?.Nome || t("reportDetail.patientCard.notProvided")}`, 10, 35);
+    doc.text(`${t("reportDetail.pdf.reportId")}: ${relatorio?.id || t("reportDetail.riskLevels.unknown")}`, 10, 45);
     doc.setFontSize(14);
-    doc.text("Resultados da Análise Genética:", 10, 60);
+    doc.text(t("reportDetail.pdf.results"), 10, 60);
     doc.setFontSize(12);
-    doc.text(`Classificação: ${mapaClassificacao[dadosAnalise?.classificacao] || "N/A"}`, 10, 70);
-    doc.text(`Confiança: ${dadosAnalise?.confianca || "N/A"}`, 10, 80);
-    doc.text(`Identidade Genética: ${dadosAnalise?.identidade || "N/A"}`, 10, 90);
-    doc.text(`Score de Alinhamento: ${dadosAnalise?.score?.toLocaleString() || "N/A"}`, 10, 100);
+    doc.text(`${t("reportDetail.pdf.classification")}: ${getRiskLabel(dadosAnalise?.classificacao, t)}`, 10, 70);
+    doc.text(`${t("reportDetail.pdf.confidence")}: ${dadosAnalise?.confianca || t("reportDetail.riskLevels.unknown")}`, 10, 80);
+    doc.text(`${t("reportDetail.pdf.identity")}: ${dadosAnalise?.identidade || t("reportDetail.riskLevels.unknown")}`, 10, 90);
+    doc.text(`${t("reportDetail.pdf.alignmentScore")}: ${dadosAnalise?.score?.toLocaleString() || t("reportDetail.riskLevels.unknown")}`, 10, 100);
 
     const resumoParaPdf = llmInsights?.length
       ? llmInsights.join("\n\n")
-      : (llmSections || []).map((sec) => `${sec.titulo || sec.id}: ${sec.comentario || "Sem complemento."}`).join("\n");
-    const resumoQuebrado = doc.splitTextToSize(resumoParaPdf || llmError || "Resumo não disponível.", 180);
-    doc.text("Resumo IA:", 10, 115);
+      : (llmSections || []).map((sec) => `${sec.titulo || sec.id}: ${sec.comentario || ""}`).join("\n");
+    const resumoQuebrado = doc.splitTextToSize(resumoParaPdf || llmError || t("reportDetail.pdf.empty"), 180);
+    doc.text(t("reportDetail.pdf.summary"), 10, 115);
     doc.text(resumoQuebrado, 10, 125);
-    doc.save("relatorio-genetico.pdf");
+    doc.save(t("reportDetail.pdf.fileName"));
   };
 
   const refSeq = dadosAnalise?.exon29_referencia || "";
@@ -220,24 +237,28 @@ const Relatorio = () => {
   const variantes = dadosAnalise?.variantes_exon29 || [];
 
   const infoFields = useMemo(() => ([
-    { label: "Nome", value: relatorio?.Nome },
-    { label: "Idade", value: relatorio?.Idade },
-    { label: "Cliente", value: relatorio?.Cliente },
-    { label: "Sexo", value: relatorio?.Sexo },
-    { label: "Raça", value: relatorio?.Raca },
-    { label: "ID do Relatório", value: relatorio?.id },
-  ]), [relatorio]);
+    { label: t("reportDetail.patientCard.fields.name"), value: relatorio?.Nome },
+    { label: t("reportDetail.patientCard.fields.age"), value: relatorio?.Idade },
+    { label: t("reportDetail.patientCard.fields.client"), value: relatorio?.Cliente },
+    { label: t("reportDetail.patientCard.fields.sex"), value: relatorio?.Sexo },
+    { label: t("reportDetail.patientCard.fields.breed"), value: relatorio?.Raca },
+    { label: t("reportDetail.patientCard.fields.reportId"), value: relatorio?.id },
+  ]), [relatorio, t]);
 
-  const classificacaoValor = useMemo(() => mapaClassificacao[dadosAnalise?.classificacao] || "N/A", [dadosAnalise]);
-  const riskTone = useMemo(() => dadosAnalise?.classificacao === 1 ? "alert" : dadosAnalise?.classificacao === 0 ? "safe" : "neutral", [dadosAnalise]);
-  const riskHelper = useMemo(() => classificacaoValor === "N/A" ? "Aguardando execução da análise" : dadosAnalise?.classificacao === 1 ? "Monitoramento imediato recomendado" : "Sem sinais de risco elevado", [classificacaoValor, dadosAnalise]);
+  const classificationValue = dadosAnalise?.classificacao;
+  const classificacaoValor = useMemo(() => getRiskLabel(classificationValue, t), [classificationValue, t]);
+  const riskTone = useMemo(
+    () => (classificationValue === 1 ? "alert" : classificationValue === 0 ? "safe" : "neutral"),
+    [classificationValue]
+  );
+  const riskHelper = useMemo(() => getRiskHelper(classificationValue, t), [classificationValue, t]);
 
   const summaryBase = useMemo(() => ([
-    { id: "risk", label: "Classificação de risco", value: classificacaoValor, helper: riskHelper, tone: riskTone },
-    { id: "confidence", label: "Confiança do modelo", value: dadosAnalise?.confianca || "N/A", helper: "Probabilidade indicada pela IA", tone: "neutral" },
-    { id: "identity", label: "Identidade genética", value: dadosAnalise?.identidade || "N/A", helper: "Comparação exon29 vs referência", tone: "neutral" },
-    { id: "alignmentScore", label: "Score de alinhamento", value: dadosAnalise?.score?.toLocaleString() || "N/A", helper: "Pontuação Needleman-Wunsch", tone: "neutral" },
-  ]), [classificacaoValor, riskHelper, riskTone, dadosAnalise]);
+    { id: "risk", label: t("reportDetail.summary.cards.risk.label"), value: classificacaoValor, helper: riskHelper, tone: riskTone },
+    { id: "confidence", label: t("reportDetail.summary.cards.confidence.label"), value: dadosAnalise?.confianca || t("reportDetail.riskLevels.unknown"), helper: t("reportDetail.summary.cards.confidence.helper"), tone: "neutral" },
+    { id: "identity", label: t("reportDetail.summary.cards.identity.label"), value: dadosAnalise?.identidade || t("reportDetail.riskLevels.unknown"), helper: t("reportDetail.summary.cards.identity.helper"), tone: "neutral" },
+    { id: "alignmentScore", label: t("reportDetail.summary.cards.alignmentScore.label"), value: dadosAnalise?.score?.toLocaleString() || t("reportDetail.riskLevels.unknown"), helper: t("reportDetail.summary.cards.alignmentScore.helper"), tone: "neutral" },
+  ]), [classificacaoValor, riskHelper, riskTone, dadosAnalise, t]);
 
   const llmLookup = useMemo(() => {
     const map = {};
@@ -254,18 +275,35 @@ const Relatorio = () => {
     llm: llmLookup[card.id] || null,
   })), [summaryBase, llmLookup]);
 
+  const renderSectionInsight = (sectionId, label) => {
+    const section = llmLookup[sectionId];
+    if (!section?.comentario) return null;
+    const probabilityLabel = section?.probabilidade !== undefined && section?.probabilidade !== null
+      ? formatProbability(section.probabilidade)
+      : null;
+    return (
+      <div className="llm-section-note">
+        <p className="llm-section-kicker">{label || section.titulo || t("reportDetail.llmPanel.insightLabel")}</p>
+        <p className="llm-section-text">{section.comentario}</p>
+        {probabilityLabel && (
+          <p className="llm-section-meta">{t("reportDetail.llmPanel.confidence", { value: probabilityLabel })}</p>
+        )}
+      </div>
+    );
+  };
+
   const dataTimeline = useMemo(() => {
     if (!dadosAnalise) return [];
     const metricas = dadosAnalise.metricas_exon29 || {};
     const eventos = [];
 
-    if (classificacaoValor !== "N/A") {
+    if (classificationValue === 0 || classificationValue === 1) {
       eventos.push({
         id: "data-risk",
         type: "data",
-        kicker: "Modelo PKD1",
-        title: "Classificação atual",
-        text: `${classificacaoValor} • ${riskHelper}`,
+        kicker: t("reportDetail.timeline.modelKicker"),
+        title: t("reportDetail.timeline.classificationTitle"),
+        text: t("reportDetail.timeline.classificationText", { classification: classificacaoValor, helper: riskHelper }),
       });
     }
 
@@ -273,9 +311,9 @@ const Relatorio = () => {
       eventos.push({
         id: "data-confidence",
         type: "data",
-        kicker: "Confiança",
-        title: "Sinal da IA",
-        text: `Probabilidade estimada em ${dadosAnalise.confianca}`,
+        kicker: t("reportDetail.timeline.confidenceKicker"),
+        title: t("reportDetail.timeline.confidenceTitle"),
+        text: t("reportDetail.timeline.confidenceText", { value: dadosAnalise.confianca }),
       });
     }
 
@@ -283,9 +321,9 @@ const Relatorio = () => {
       eventos.push({
         id: "data-score",
         type: "data",
-        kicker: "Needleman-Wunsch",
-        title: "Score do alinhamento",
-        text: `Pontuação acumulada de ${dadosAnalise.score.toLocaleString()}`,
+        kicker: t("reportDetail.timeline.scoreKicker"),
+        title: t("reportDetail.timeline.scoreTitle"),
+        text: t("reportDetail.timeline.scoreText", { value: dadosAnalise.score.toLocaleString() }),
       });
     }
 
@@ -293,9 +331,9 @@ const Relatorio = () => {
       eventos.push({
         id: "data-coverage",
         type: "data",
-        kicker: "Cobertura",
-        title: "Trecho analisado",
-        text: `Cobertura do exon29 em ${metricas.cobertura_pct}%`,
+        kicker: t("reportDetail.timeline.coverageKicker"),
+        title: t("reportDetail.timeline.coverageTitle"),
+        text: t("reportDetail.timeline.coverageText", { value: metricas.cobertura_pct }),
       });
     }
 
@@ -303,14 +341,14 @@ const Relatorio = () => {
       eventos.push({
         id: "data-variants",
         type: "data",
-        kicker: "Mutação",
-        title: "Variantes detectadas",
-        text: `${metricas.total_variantes} alteração(ões) no trecho avaliado`,
+        kicker: t("reportDetail.timeline.variantsKicker"),
+        title: t("reportDetail.timeline.variantsTitle"),
+        text: t("reportDetail.timeline.variantsText", { count: metricas.total_variantes }),
       });
     }
 
     return eventos;
-  }, [dadosAnalise, classificacaoValor, riskHelper]);
+  }, [dadosAnalise, classificationValue, classificacaoValor, riskHelper, t]);
 
   const llmTimeline = useMemo(() => {
     if (!llmInsights?.length) return [];
@@ -318,11 +356,11 @@ const Relatorio = () => {
     return llmInsights.map((texto, i) => ({
       id: `llm-${i}`,
       type: "llm",
-      kicker: "Insight LLM",
-      title: `Complemento ${i + 1}`,
+      kicker: t("reportDetail.timeline.llmKicker"),
+      title: t("reportDetail.timeline.llmTitle", { index: i + 1 }),
       text: texto,
     }));
-  }, [llmInsights]);
+  }, [llmInsights, t]);
 
   const timelineEntries = useMemo(() => {
     if (!dataTimeline.length && !llmTimeline.length) return [];
@@ -338,13 +376,13 @@ const Relatorio = () => {
 
   const renderTimeline = () => {
     if (llmLoading) {
-      return <p className="llm-text muted">Gerando resumo inteligente...</p>;
+      return <p className="llm-text muted">{t("reportDetail.llmPanel.generating")}</p>;
     }
 
     const itens = timelineEntries.length ? timelineEntries : dataTimeline;
 
     if (!itens.length) {
-      return <p className="llm-text muted">Nenhuma métrica disponível para montar o resumo.</p>;
+      return <p className="llm-text muted">{t("reportDetail.llmPanel.empty")}</p>;
     }
 
     return (
@@ -362,7 +400,10 @@ const Relatorio = () => {
         {llmError && <p className="llm-text error">{llmError}</p>}
         {llmMeta?.gerado_em && (
           <p className="llm-text meta">
-            Gerado por {llmMeta.modelo || "Gemini"} em {new Date(llmMeta.gerado_em).toLocaleString()}
+            {t("reportDetail.llmPanel.generated", {
+              model: llmMeta.modelo || "Gemini",
+              date: new Date(llmMeta.gerado_em).toLocaleString(locale),
+            })}
           </p>
         )}
       </div>
@@ -392,8 +433,16 @@ const Relatorio = () => {
     return Array.from(new Set(indexes));
   }, [variantes]);
 
-  if (loading) return <div className="loading">Carregando dados...</div>;
-  if (error) return <div className="error">{error}</div>;
+  const handleMockEmail = () => {
+    if (emailTimeoutRef.current) {
+      clearTimeout(emailTimeoutRef.current);
+    }
+    setEmailStatus("sent");
+    emailTimeoutRef.current = setTimeout(() => setEmailStatus("idle"), 4000);
+  };
+
+  if (loading) return <div className="loading">{t("reportDetail.loading")}</div>;
+  if (error) return <div className="error">{t("reportDetail.errors.generic")}</div>;
 
   return (
     <div className="analysis-page">
@@ -401,24 +450,38 @@ const Relatorio = () => {
       <main className="analysis-content">
         <header className="page-header">
           <div>
-            <p className="page-kicker">PKD1 • Exon29</p>
-            <h1>Relatório Genético</h1>
+            <p className="page-kicker">{t("reportDetail.page.kicker")}</p>
+            <h1>{t("reportDetail.page.title")}</h1>
           </div>
-            <button className="button-download" onClick={downloadPDF}>Baixar PDF</button>
+          <div className="header-actions">
+            <button className="button-email" type="button" onClick={handleMockEmail}>
+              {t("reportDetail.page.email")}
+            </button>
+            <button className="button-download" onClick={downloadPDF}>
+              {t("reportDetail.page.download")}
+            </button>
+            <div
+              className={`email-pop ${emailStatus === "sent" ? "visible" : ""}`}
+              role="status"
+              aria-live="polite"
+            >
+              {t("reportDetail.page.emailSent")}
+            </div>
+          </div>
         </header>
 
         <section className="panel form-card">
           <div className="panel-header">
             <div>
-              <p className="panel-kicker">Ficha do paciente</p>
-              <h2>Dados do felino</h2>
+              <p className="panel-kicker">{t("reportDetail.patientCard.kicker")}</p>
+              <h2>{t("reportDetail.patientCard.title")}</h2>
             </div>
           </div>
           <div className="form-grid">
             {infoFields.map(field => (
               <div className="form-field" key={field.label}>
                 <span className="field-label">{field.label}</span>
-                <span className="field-value">{field.value || "Não informado"}</span>
+                <span className="field-value">{field.value || t("reportDetail.patientCard.notProvided")}</span>
               </div>
             ))}
           </div>
@@ -439,7 +502,7 @@ const Relatorio = () => {
                     <p className="summary-helper">{card.helper}</p>
                   </div>
                   {llmProbFormatted && (
-                    <span className="summary-llm-prob">LLM: {llmProbFormatted}</span>
+                    <span className="summary-llm-prob">{t("reportDetail.summary.llmPrefix", { value: llmProbFormatted })}</span>
                   )}
                 </div>
                 {card.llm?.comentario && (
@@ -453,8 +516,8 @@ const Relatorio = () => {
         <section className="panel llm-panel">
           <div className="panel-header">
             <div>
-              <p className="panel-kicker">Resumo LLM</p>
-              <h2>Análise textual inteligente</h2>
+              <p className="panel-kicker">{t("reportDetail.llmPanel.kicker")}</p>
+              <h2>{t("reportDetail.llmPanel.title")}</h2>
             </div>
           </div>
           {renderTimeline()}
@@ -464,10 +527,10 @@ const Relatorio = () => {
           <section className="panel alignment-panel">
             <div className="panel-header">
               <div>
-                <p className="panel-kicker">Alinhamento</p>
-                <h2>Alinhamento Genético (Exon29)</h2>
+                <p className="panel-kicker">{t("reportDetail.alignment.kicker")}</p>
+                <h2>{t("reportDetail.alignment.title")}</h2>
               </div>
-              <span className="chip">{variantes?.length || 0} mutações</span>
+              <span className="chip">{t("reportDetail.alignment.mutations", { count: variantes?.length || 0 })}</span>
             </div>
             <NeedlemanWunsch
               refSeq={refSeq}
@@ -476,21 +539,28 @@ const Relatorio = () => {
               windowRadius={6}
               maxWindows={4}
             />
+            {renderSectionInsight("alignmentDetail", t("reportDetail.alignment.insight"))}
             <div className="variant-section">
               {variantesList.length > 0 ? (
                 <ul className="variant-list">
                   {variantesList.map((variant, idx) => (
                     <li key={`${variant.posicao_exon || idx}-${variant.ref || 'r'}-${variant.alt || 'a'}`}>
-                      <span className="variant-pill">{variant.tipo || 'mutação'}</span>
-                      <span className="variant-detail">Exon {variant.posicao_exon || 'N/D'} • {variant.ref || '-'} → {variant.alt || '-'}</span>
+                      <span className="variant-pill">{variant.tipo || t("reportDetail.alignment.fallbackType")}</span>
+                      <span className="variant-detail">
+                        {t("reportDetail.alignment.variant", {
+                          position: variant.posicao_exon || t("reportDetail.riskLevels.unknown"),
+                          ref: variant.ref || '-',
+                          alt: variant.alt || '-',
+                        })}
+                      </span>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="variant-empty">Nenhuma mutação detectada no trecho exibido.</p>
+                <p className="variant-empty">{t("reportDetail.alignment.empty")}</p>
               )}
               {variantes && variantes.length > 4 && (
-                <p className="variant-more">+{variantes.length - 4} mutações adicionais no exon.</p>
+                <p className="variant-more">{t("reportDetail.alignment.more", { count: variantes.length - 4 })}</p>
               )}
             </div>
           </section>
@@ -498,8 +568,8 @@ const Relatorio = () => {
           <section className="panel transcription-panel">
             <div className="panel-header">
               <div>
-                <p className="panel-kicker">Transcrição</p>
-                <h2>RNA mensageiro</h2>
+                <p className="panel-kicker">{t("reportDetail.transcription.kicker")}</p>
+                <h2>{t("reportDetail.transcription.title")}</h2>
               </div>
             </div>
             <RNASequence
@@ -509,13 +579,14 @@ const Relatorio = () => {
               windowRadius={6}
               maxWindows={3}
             />
+            {renderSectionInsight("rnaFocus", t("reportDetail.transcription.insight"))}
           </section>
 
           <section className="panel proteins-panel">
             <div className="panel-header">
               <div>
-                <p className="panel-kicker">Proteínas</p>
-                <h2>Aminoácidos derivados</h2>
+                <p className="panel-kicker">{t("reportDetail.proteins.kicker")}</p>
+                <h2>{t("reportDetail.proteins.title")}</h2>
               </div>
             </div>
             <Proteins
@@ -523,6 +594,7 @@ const Relatorio = () => {
               queryAmino={queryAmino}
               variantCodonIndexes={variantCodonIndexes}
             />
+            {renderSectionInsight("proteinMap", t("reportDetail.proteins.insight"))}
           </section>
         </div>
       </main>

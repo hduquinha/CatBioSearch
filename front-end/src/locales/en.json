@@ -1,0 +1,350 @@
+{
+  "language": {
+    "portuguese": "Portuguese",
+    "english": "English",
+    "toggle": "Switch language"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error has occurred.",
+    "noData": "No data available.",
+    "confirmDelete": "Are you sure you want to delete this record?",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "buttons": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "export": "Export",
+    "startAnalysis": "+ Start Analysis",
+    "analysisHistory": "Analysis History",
+    "registerClient": "Register Client",
+    "seeMore": "See more",
+    "enter": "Sign in",
+    "view": "View"
+  },
+  "sidebar": {
+    "home": "Home",
+    "reports": "Reports",
+    "clients": "Clients",
+    "access": "Access",
+    "logout": "Logout"
+  },
+  "login": {
+    "title": "Login",
+    "usernamePlaceholder": "Username",
+    "passwordPlaceholder": "Enter your password",
+    "error": "Login error.",
+    "serverError": "Unable to reach the server."
+  },
+  "home": {
+    "newsTitle": "Software News!",
+    "newsSubtitle": "Stay up to date with biomedical innovations.",
+    "softwareUse": "Software Usage",
+    "recentReports": "Latest Reports",
+    "clinic": "Clinic",
+    "catName": "Cat name",
+    "reportId": "ID",
+    "noReports": "No reports found."
+  },
+  "users": {
+    "title": "Users",
+    "add": "+ Add",
+    "tableHeaders": {
+      "id": "ID",
+      "name": "Name",
+      "username": "Username",
+      "active": "Active",
+      "birth": "Birth date",
+      "actions": "Actions"
+    },
+    "deleteSuccess": "User removed successfully",
+    "deleteError": "Failed to delete user.",
+    "empty": "No data available."
+  },
+  "clientsPage": {
+    "title": "Registered Clients",
+    "tableHeaders": {
+      "id": "ID",
+      "company": "Company Name",
+      "address": "Address",
+      "email": "Email",
+      "phone": "Phone",
+      "actions": "Actions"
+    },
+    "deleteSuccess": "Client deleted successfully.",
+    "deleteError": "Failed to delete client. Please try again.",
+    "confirmDelete": "Are you sure you want to delete this client?",
+    "loadError": "Failed to load data.",
+    "empty": "No data available."
+  },
+  "createClient": {
+    "title": "Register Client",
+    "fields": {
+      "company": "Company Name",
+      "phone": "Phone",
+      "email": "Email",
+      "address": "Address",
+      "notes": "Notes"
+    },
+    "placeholders": {
+      "company": "Enter the company name",
+      "phone": "Enter the phone number",
+      "email": "Enter the email",
+      "address": "Enter the address",
+      "notes": "Enter a note"
+    },
+    "buttons": {
+      "back": "Back",
+      "submit": "Finish Registration →"
+    },
+    "success": "Client registered successfully.",
+    "error": "An error occurred while registering the client."
+  },
+  "reportsHistory": {
+    "title": "Reports History",
+    "error": "No data available.",
+    "empty": "No reports available at the moment.",
+    "deleteSuccess": "Record deleted successfully.",
+    "deleteError": "Failed to delete the record. Please try again.",
+    "tableHeaders": {
+      "id": "ID",
+      "name": "Name",
+      "breed": "Breed",
+      "client": "Client",
+      "age": "Age",
+      "actions": "Actions"
+    }
+  },
+  "reportDetail": {
+    "loading": "Loading data...",
+    "errors": {
+      "generic": "Failed to load report data",
+      "llmGenerate": "Unable to generate LLM complements.",
+      "llmLoad": "Unable to load LLM complements."
+    },
+    "page": {
+      "kicker": "PKD1 • Exon29",
+      "title": "Genetic Report",
+      "download": "Download PDF",
+      "email": "Send by email",
+      "emailSent": "Piaf, it was emailed, ok?"
+    },
+    "patientCard": {
+      "kicker": "Patient record",
+      "title": "Cat data",
+      "fields": {
+        "name": "Name",
+        "age": "Age",
+        "client": "Client",
+        "sex": "Sex",
+        "breed": "Breed",
+        "reportId": "Report ID"
+      },
+      "notProvided": "Not provided"
+    },
+    "summary": {
+      "llmPrefix": "LLM: {{value}}",
+      "cards": {
+        "risk": {
+          "label": "Risk classification",
+          "helper": {
+            "awaiting": "Awaiting analysis execution",
+            "high": "Immediate monitoring recommended",
+            "low": "No signs of elevated risk"
+          }
+        },
+        "confidence": {
+          "label": "Model confidence",
+          "helper": "Probability indicated by AI"
+        },
+        "identity": {
+          "label": "Genetic identity",
+          "helper": "Exon29 vs reference comparison"
+        },
+        "alignmentScore": {
+          "label": "Alignment score",
+          "helper": "Needleman-Wunsch score"
+        }
+      }
+    },
+    "llmPanel": {
+      "kicker": "LLM summary",
+      "title": "Intelligent text analysis",
+      "generating": "Generating smart summary...",
+      "empty": "No metrics available to build the summary.",
+      "insightLabel": "AI Insight",
+      "confidence": "LLM confidence: {{value}}",
+      "generated": "Generated by {{model}} on {{date}}"
+    },
+    "alignment": {
+      "kicker": "Alignment",
+      "title": "Genetic Alignment (Exon29)",
+      "mutations": "{{count}} mutations",
+      "insight": "AI summary for the alignment",
+      "empty": "No mutations detected in the displayed region.",
+      "more": "+{{count}} additional mutations in the exon.",
+      "variant": "Exon {{position}} • {{ref}} → {{alt}}",
+      "fallbackType": "mutation",
+      "windowTitle": "Mutation-focused windows",
+      "windowSubtitle": "Reference on top, sample below for quick reading.",
+      "position": "Position {{value}}",
+      "legend": {
+        "match": "Match",
+        "mismatch": "Mismatch",
+        "gap": "Gap",
+        "mutation": "Mutation"
+      }
+    },
+    "transcription": {
+      "kicker": "Transcription",
+      "title": "Messenger RNA",
+      "insight": "AI summary for transcription",
+      "defaultBadge": "segment",
+      "windowTitle": "Highlighted transcription",
+      "windowSubtitle": "Windows aligned with the mutations.",
+      "codon": "Codon {{index}}: {{ref}} → {{sample}}"
+    },
+    "proteins": {
+      "kicker": "Proteins",
+      "title": "Derived amino acids",
+      "insight": "AI summary for amino acids",
+      "mapTitle": "Amino acid map",
+      "mapSubtitle": "Only codons affected by mutations are shown.",
+      "empty": "No translated sequence available.",
+      "badge": "mutation",
+      "properties": {
+        "Ala": "Hydrophobic",
+        "Arg": "Basic",
+        "Asn": "Polar",
+        "Asp": "Acidic",
+        "Cys": "Polar",
+        "Gln": "Polar",
+        "Glu": "Acidic",
+        "Gly": "Flexible",
+        "His": "Basic",
+        "Ile": "Hydrophobic",
+        "Leu": "Hydrophobic",
+        "Lys": "Basic",
+        "Met": "Start",
+        "Phe": "Aromatic",
+        "Pro": "Turn",
+        "Ser": "Polar",
+        "Thr": "Polar",
+        "Trp": "Aromatic",
+        "Tyr": "Aromatic",
+        "Val": "Hydrophobic",
+        "STOP": "Stop"
+      }
+    },
+    "timeline": {
+      "modelKicker": "PKD1 model",
+      "classificationTitle": "Current classification",
+      "classificationText": "{{classification}} • {{helper}}",
+      "confidenceKicker": "Confidence",
+      "confidenceTitle": "AI signal",
+      "confidenceText": "Probability estimated at {{value}}",
+      "scoreKicker": "Needleman-Wunsch",
+      "scoreTitle": "Alignment score",
+      "scoreText": "Accumulated score of {{value}}",
+      "coverageKicker": "Coverage",
+      "coverageTitle": "Analyzed region",
+      "coverageText": "Exon29 coverage at {{value}}%",
+      "variantsKicker": "Mutation",
+      "variantsTitle": "Detected variants",
+      "variantsText": "{{count}} change(s) in the evaluated region",
+      "llmKicker": "LLM Insight",
+      "llmTitle": "Add-on {{index}}",
+      "llmEmpty": "No metrics available to build the summary."
+    },
+    "riskLevels": {
+      "low": "Low Risk",
+      "high": "High Risk",
+      "unknown": "N/A"
+    },
+    "pdf": {
+      "title": "Complete Genetic Report",
+      "animalName": "Name",
+      "reportId": "Report ID",
+      "results": "Genetic Analysis Results:",
+      "classification": "Classification",
+      "confidence": "Confidence",
+      "identity": "Genetic Identity",
+      "alignmentScore": "Alignment Score",
+      "summary": "AI Summary:",
+      "fileName": "genetic-report.pdf",
+      "empty": "Summary not available."
+    },
+    "labels": {
+      "llm": "AI Summary",
+      "mutations": "mutations",
+      "exon": "Exon"
+    }
+  },
+  "charts": {
+    "reportsByMonth": {
+      "title": "Reports generated per month",
+      "dataset": "Reports generated per month",
+      "months": {
+        "jan": "January",
+        "feb": "February",
+        "mar": "March",
+        "apr": "April",
+        "may": "May",
+        "jun": "June",
+        "jul": "July",
+        "aug": "August",
+        "sep": "September",
+        "oct": "October",
+        "nov": "November",
+        "dec": "December"
+      }
+    }
+  },
+  "homeWidgets": {
+    "lastAnalyses": {
+      "title": "Latest Analyses",
+      "loading": "Loading analyses...",
+      "subtitle": "Updated on {{date}}"
+    }
+  },
+  "analysisSteps": {
+    "steps": ["Step 1", "Step 2", "Step 3"],
+    "sections": {
+      "basicInfo": "Cat basic information",
+      "clinicInfo": "Veterinary clinic information",
+      "analysisInfo": "About the analysis"
+    },
+    "fields": {
+      "catName": "Name",
+      "breed": "Breed",
+      "age": "Age",
+      "sex": "Sex",
+      "company": "Company name",
+      "phone": "Phone",
+      "email": "Email",
+      "address": "Address",
+      "isRegistered": "Already registered",
+      "geneticMaterial": "Genetic material",
+      "sequencing": "Sequencing"
+    },
+    "placeholders": {
+      "select": "Select",
+      "file": "Choose a file"
+    },
+    "options": {
+      "male": "Male",
+      "female": "Female",
+      "notRegistered": "No"
+    },
+    "buttons": {
+      "backHome": "Back",
+      "previous": "Previous",
+      "next": "Next",
+      "finish": "Finish"
+    }
+  }
+}

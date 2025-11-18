@@ -28,6 +28,7 @@ const candidateBases = Array.from(
 
 async function fetchLatestAnalysisSnapshot() {
   const errors = [];
+  let onlyNotFound = true;
 
   for (const base of candidateBases) {
     if (!base) continue;
@@ -37,6 +38,7 @@ async function fetchLatestAnalysisSnapshot() {
         errors.push(`Sem análises disponíveis em ${base}`);
         continue;
       }
+      onlyNotFound = false;
       if (!response.ok) {
         errors.push(`Falha ${response.status} em ${base}`);
         continue;
@@ -53,7 +55,7 @@ async function fetchLatestAnalysisSnapshot() {
 
   const message = errors.length ? errors.join(" | ") : "Nenhum serviço FASTA respondeu";
   const err = new Error(`Não foi possível obter os dados da análise: ${message}`);
-  err.status = 502;
+  err.status = onlyNotFound ? 404 : 502;
   throw err;
 }
 

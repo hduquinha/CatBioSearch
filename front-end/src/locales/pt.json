@@ -1,0 +1,350 @@
+{
+  "language": {
+    "portuguese": "Português",
+    "english": "Inglês",
+    "toggle": "Alterar idioma"
+  },
+  "common": {
+    "loading": "Carregando...",
+    "error": "Ocorreu um erro.",
+    "noData": "Nenhum dado disponível.",
+    "confirmDelete": "Tem certeza que deseja excluir este registro?",
+    "yes": "Sim",
+    "no": "Não"
+  },
+  "buttons": {
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "delete": "Excluir",
+    "edit": "Alterar",
+    "add": "Adicionar",
+    "export": "Exportar",
+    "startAnalysis": "+ Iniciar Análise",
+    "analysisHistory": "Histórico de Análises",
+    "registerClient": "Cadastrar Cliente",
+    "seeMore": "Ver mais",
+    "enter": "Entrar",
+    "view": "Visualizar"
+  },
+  "sidebar": {
+    "home": "Início",
+    "reports": "Relatórios",
+    "clients": "Clientes",
+    "access": "Acesso",
+    "logout": "Sair"
+  },
+  "login": {
+    "title": "Login",
+    "usernamePlaceholder": "Usuário",
+    "passwordPlaceholder": "Digite sua senha",
+    "error": "Erro no login.",
+    "serverError": "Erro ao conectar com o servidor."
+  },
+  "home": {
+    "newsTitle": "Novidades do Software!",
+    "newsSubtitle": "Fique por dentro das inovações da biomedicina.",
+    "softwareUse": "Uso do Software",
+    "recentReports": "Últimos Relatórios",
+    "clinic": "Clínica",
+    "catName": "Nome do Gato",
+    "reportId": "ID",
+    "noReports": "Nenhum relatório encontrado."
+  },
+  "users": {
+    "title": "Usuários",
+    "add": "+ Adicionar",
+    "tableHeaders": {
+      "id": "ID",
+      "name": "Nome",
+      "username": "Usuário",
+      "active": "Ativo",
+      "birth": "Nascimento",
+      "actions": "Ações"
+    },
+    "deleteSuccess": "Usuário removido com sucesso",
+    "deleteError": "Erro ao excluir usuário.",
+    "empty": "Nenhum dado disponível."
+  },
+  "clientsPage": {
+    "title": "Clientes Cadastrados",
+    "tableHeaders": {
+      "id": "ID",
+      "company": "Nome da Empresa",
+      "address": "Endereço",
+      "email": "E-mail",
+      "phone": "Telefone",
+      "actions": "Ações"
+    },
+    "deleteSuccess": "Cliente excluído com sucesso.",
+    "deleteError": "Erro ao excluir o cliente. Tente novamente.",
+    "confirmDelete": "Tem certeza que deseja excluir este cliente?",
+    "loadError": "Erro ao carregar dados.",
+    "empty": "Nenhum dado disponível."
+  },
+  "createClient": {
+    "title": "Cadastrar Cliente",
+    "fields": {
+      "company": "Nome da Empresa",
+      "phone": "Telefone",
+      "email": "E-mail",
+      "address": "Endereço",
+      "notes": "Observação"
+    },
+    "placeholders": {
+      "company": "Digite o nome da empresa",
+      "phone": "Digite o telefone",
+      "email": "Digite o e-mail",
+      "address": "Digite o endereço",
+      "notes": "Digite uma observação"
+    },
+    "buttons": {
+      "back": "Voltar",
+      "submit": "Finalizar Cadastro →"
+    },
+    "success": "Cliente cadastrado com sucesso.",
+    "error": "Ocorreu um erro ao cadastrar o cliente."
+  },
+  "reportsHistory": {
+    "title": "Histórico de Relatórios",
+    "error": "Nenhum dado cadastrado.",
+    "empty": "Nenhum relatório disponível no momento.",
+    "deleteSuccess": "Registro excluído com sucesso.",
+    "deleteError": "Erro ao excluir o registro. Tente novamente.",
+    "tableHeaders": {
+      "id": "ID",
+      "name": "Nome",
+      "breed": "Raça",
+      "client": "Cliente",
+      "age": "Idade",
+      "actions": "Ações"
+    }
+  },
+  "reportDetail": {
+    "loading": "Carregando dados...",
+    "errors": {
+      "generic": "Erro ao carregar dados do relatório",
+      "llmGenerate": "Não foi possível gerar os complementos do LLM.",
+      "llmLoad": "Não foi possível carregar os complementos do LLM."
+    },
+    "page": {
+      "kicker": "PKD1 • Exon29",
+      "title": "Relatório Genético",
+      "download": "Baixar PDF",
+      "email": "Enviar por e-mail",
+      "emailSent": "Piaf, foi enviado por e-mail, ok?"
+    },
+    "patientCard": {
+      "kicker": "Ficha do paciente",
+      "title": "Dados do felino",
+      "fields": {
+        "name": "Nome",
+        "age": "Idade",
+        "client": "Cliente",
+        "sex": "Sexo",
+        "breed": "Raça",
+        "reportId": "ID do Relatório"
+      },
+      "notProvided": "Não informado"
+    },
+    "summary": {
+      "llmPrefix": "LLM: {{value}}",
+      "cards": {
+        "risk": {
+          "label": "Classificação de risco",
+          "helper": {
+            "awaiting": "Aguardando execução da análise",
+            "high": "Monitoramento imediato recomendado",
+            "low": "Sem sinais de risco elevado"
+          }
+        },
+        "confidence": {
+          "label": "Confiança do modelo",
+          "helper": "Probabilidade indicada pela IA"
+        },
+        "identity": {
+          "label": "Identidade genética",
+          "helper": "Comparação exon29 vs referência"
+        },
+        "alignmentScore": {
+          "label": "Score de alinhamento",
+          "helper": "Pontuação Needleman-Wunsch"
+        }
+      }
+    },
+    "llmPanel": {
+      "kicker": "Resumo LLM",
+      "title": "Análise textual inteligente",
+      "generating": "Gerando resumo inteligente...",
+      "empty": "Nenhuma métrica disponível para montar o resumo.",
+      "insightLabel": "Insight IA",
+      "confidence": "Confiança LLM: {{value}}",
+      "generated": "Gerado por {{model}} em {{date}}"
+    },
+    "alignment": {
+      "kicker": "Alinhamento",
+      "title": "Alinhamento Genético (Exon29)",
+      "mutations": "{{count}} mutações",
+      "insight": "Resumo IA para o alinhamento",
+      "empty": "Nenhuma mutação detectada no trecho exibido.",
+      "more": "+{{count}} mutações adicionais no exon.",
+      "variant": "Exon {{position}} • {{ref}} → {{alt}}",
+      "fallbackType": "mutação",
+      "windowTitle": "Trechos focados em mutações",
+      "windowSubtitle": "Referência no topo, amostra logo abaixo para leitura rápida.",
+      "position": "Posição {{value}}",
+      "legend": {
+        "match": "Coincidência",
+        "mismatch": "Diferença",
+        "gap": "Lacuna",
+        "mutation": "Mutação"
+      }
+    },
+    "transcription": {
+      "kicker": "Transcrição",
+      "title": "RNA mensageiro",
+      "insight": "Resumo IA para a transcrição",
+      "defaultBadge": "trecho",
+      "windowTitle": "Transcrição em destaque",
+      "windowSubtitle": "Janelas equivalentes ao alinhamento, focadas nas mutações.",
+      "codon": "Códon {{index}}: {{ref}} → {{sample}}"
+    },
+    "proteins": {
+      "kicker": "Proteínas",
+      "title": "Aminoácidos derivados",
+      "insight": "Resumo IA para aminoácidos",
+      "mapTitle": "Mapa de aminoácidos",
+      "mapSubtitle": "Mostramos apenas os códons impactados pelas mutações.",
+      "empty": "Nenhuma sequência traduzida disponível.",
+      "badge": "mutação",
+      "properties": {
+        "Ala": "Hidrofóbica",
+        "Arg": "Básica",
+        "Asn": "Polar",
+        "Asp": "Ácida",
+        "Cys": "Polar",
+        "Gln": "Polar",
+        "Glu": "Ácida",
+        "Gly": "Flexível",
+        "His": "Básica",
+        "Ile": "Hidrofóbica",
+        "Leu": "Hidrofóbica",
+        "Lys": "Básica",
+        "Met": "Início",
+        "Phe": "Aromática",
+        "Pro": "Cotovelo",
+        "Ser": "Polar",
+        "Thr": "Polar",
+        "Trp": "Aromática",
+        "Tyr": "Aromática",
+        "Val": "Hidrofóbica",
+        "STOP": "Parada"
+      }
+    },
+    "timeline": {
+      "modelKicker": "Modelo PKD1",
+      "classificationTitle": "Classificação atual",
+      "classificationText": "{{classification}} • {{helper}}",
+      "confidenceKicker": "Confiança",
+      "confidenceTitle": "Sinal da IA",
+      "confidenceText": "Probabilidade estimada em {{value}}",
+      "scoreKicker": "Needleman-Wunsch",
+      "scoreTitle": "Score do alinhamento",
+      "scoreText": "Pontuação acumulada de {{value}}",
+      "coverageKicker": "Cobertura",
+      "coverageTitle": "Trecho analisado",
+      "coverageText": "Cobertura do exon29 em {{value}}%",
+      "variantsKicker": "Mutação",
+      "variantsTitle": "Variantes detectadas",
+      "variantsText": "{{count}} alteração(ões) no trecho avaliado",
+      "llmKicker": "Insight LLM",
+      "llmTitle": "Complemento {{index}}",
+      "llmEmpty": "Nenhuma métrica disponível para montar o resumo."
+    },
+    "riskLevels": {
+      "low": "Risco Baixo",
+      "high": "Risco Alto",
+      "unknown": "N/A"
+    },
+    "pdf": {
+      "title": "Relatório Genético Completo",
+      "animalName": "Nome",
+      "reportId": "ID do Relatório",
+      "results": "Resultados da Análise Genética:",
+      "classification": "Classificação",
+      "confidence": "Confiança",
+      "identity": "Identidade Genética",
+      "alignmentScore": "Score de Alinhamento",
+      "summary": "Resumo IA:",
+      "fileName": "relatorio-genetico.pdf",
+      "empty": "Resumo não disponível."
+    },
+    "labels": {
+      "llm": "Resumo IA",
+      "mutations": "mutações",
+      "exon": "Exon"
+    }
+  },
+  "charts": {
+    "reportsByMonth": {
+      "title": "Relatórios gerados por mês",
+      "dataset": "Relatórios gerados por mês",
+      "months": {
+        "jan": "Janeiro",
+        "feb": "Fevereiro",
+        "mar": "Março",
+        "apr": "Abril",
+        "may": "Maio",
+        "jun": "Junho",
+        "jul": "Julho",
+        "aug": "Agosto",
+        "sep": "Setembro",
+        "oct": "Outubro",
+        "nov": "Novembro",
+        "dec": "Dezembro"
+      }
+    }
+  },
+  "homeWidgets": {
+    "lastAnalyses": {
+      "title": "Últimas Análises",
+      "loading": "Carregando análises...",
+      "subtitle": "Atualizado em {{date}}"
+    }
+  },
+  "analysisSteps": {
+    "steps": ["Passo 1", "Passo 2", "Passo 3"],
+    "sections": {
+      "basicInfo": "Informações Básicas do Gato",
+      "clinicInfo": "Informações da Clínica Veterinária",
+      "analysisInfo": "Sobre a Análise"
+    },
+    "fields": {
+      "catName": "Nome",
+      "breed": "Raça",
+      "age": "Idade",
+      "sex": "Sexo",
+      "company": "Nome da Empresa",
+      "phone": "Telefone",
+      "email": "E-mail",
+      "address": "Endereço",
+      "isRegistered": "Já é cadastrado",
+      "geneticMaterial": "Material Genético",
+      "sequencing": "Sequenciamento"
+    },
+    "placeholders": {
+      "select": "Selecione",
+      "file": "Escolha um arquivo"
+    },
+    "options": {
+      "male": "Macho",
+      "female": "Fêmea",
+      "notRegistered": "Não"
+    },
+    "buttons": {
+      "backHome": "Voltar",
+      "previous": "Anterior",
+      "next": "Próximo",
+      "finish": "Finalizar"
+    }
+  }
+}

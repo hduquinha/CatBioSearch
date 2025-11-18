@@ -1,32 +1,9 @@
 // src/components/Proteins.js
-import React, { useMemo } from "react";
+import React, { useMemo, useCallback } from "react";
 import "./Protein.css";
+import { useTranslation } from "react-i18next";
 
-const AMINO_PROPERTIES = {
-  Ala: "Hidrofóbica",
-  Arg: "Básica",
-  Asn: "Polar",
-  Asp: "Ácida",
-  Cys: "Polar",
-  Gln: "Polar",
-  Glu: "Ácida",
-  Gly: "Flexível",
-  His: "Básica",
-  Ile: "Hidrofóbica",
-  Leu: "Hidrofóbica",
-  Lys: "Básica",
-  Met: "Início",
-  Phe: "Aromática",
-  Pro: "Cotovelo",
-  Ser: "Polar",
-  Thr: "Polar",
-  Trp: "Aromática",
-  Tyr: "Aromática",
-  Val: "Hidrofóbica",
-  STOP: "Parada"
-};
-
-const buildCards = (refAmino, sampleAmino, variantCodonIndexes, windowSize) => {
+const buildCards = (refAmino, sampleAmino, variantCodonIndexes, windowSize, resolveProperty) => {
   const length = Math.max(refAmino.length, sampleAmino.length);
   if (!length) return [];
 
@@ -54,22 +31,27 @@ const buildCards = (refAmino, sampleAmino, variantCodonIndexes, windowSize) => {
         ref,
         sample,
         differs: ref !== sample,
-        property: AMINO_PROPERTIES[ref] || "",
+        property: resolveProperty(ref),
       };
     });
 };
 
 const Proteins = ({ refAmino = [], queryAmino = [], variantCodonIndexes = [], windowSize = 2 }) => {
+  const { t } = useTranslation();
+  const resolveProperty = useCallback(
+    (aa) => t(`reportDetail.proteins.properties.${aa}`, { defaultValue: aa || "" }),
+    [t]
+  );
   const cards = useMemo(
-    () => buildCards(refAmino, queryAmino, variantCodonIndexes, windowSize),
-    [refAmino, queryAmino, variantCodonIndexes, windowSize]
+    () => buildCards(refAmino, queryAmino, variantCodonIndexes, windowSize, resolveProperty),
+    [refAmino, queryAmino, variantCodonIndexes, windowSize, resolveProperty]
   );
 
   if (!cards.length) {
     return (
       <div className="proteins-container">
-        <h3>Proteínas</h3>
-        <p className="proteins-empty">Nenhuma sequência traduzida disponível.</p>
+        <h3>{t("reportDetail.proteins.kicker")}</h3>
+        <p className="proteins-empty">{t("reportDetail.proteins.empty")}</p>
       </div>
     );
   }
@@ -77,8 +59,8 @@ const Proteins = ({ refAmino = [], queryAmino = [], variantCodonIndexes = [], wi
   return (
     <div className="proteins-container">
       <div className="proteins-head">
-        <h3>Mapa de aminoácidos</h3>
-        <p>Mostramos apenas os códons impactados pelas mutações.</p>
+        <h3>{t("reportDetail.proteins.mapTitle")}</h3>
+        <p>{t("reportDetail.proteins.mapSubtitle")}</p>
       </div>
       <div className="proteins-grid">
         {cards.map((card) => (
@@ -92,7 +74,7 @@ const Proteins = ({ refAmino = [], queryAmino = [], variantCodonIndexes = [], wi
               <span className="aa-pill sample">{card.sample}</span>
             </div>
             <p className="protein-property">{card.property || ""}</p>
-            {card.differs && <span className="protein-alert">mutação</span>}
+            {card.differs && <span className="protein-alert">{t("reportDetail.proteins.badge")}</span>}
           </article>
         ))}
       </div>

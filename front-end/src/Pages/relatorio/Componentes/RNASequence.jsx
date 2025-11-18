@@ -1,6 +1,7 @@
 // src/components/RNASequence.js
 import React, { useMemo } from "react";
 import "./RNASequences.css";
+import { useTranslation } from "react-i18next";
 
 const dnaToRna = (seq = "") => seq.replace(/T/gi, "U");
 const classify = (a, b) => {
@@ -96,7 +97,7 @@ const buildColumns = (refSeq, sampleSeq, centerIndex, radius) => {
   return cols;
 };
 
-const buildWindows = (refSeq, sampleSeq, variantes, windowRadius, maxWindows) => {
+const buildWindows = (refSeq, sampleSeq, variantes, windowRadius, maxWindows, fallbackBadge) => {
   const total = Math.max(refSeq.length, sampleSeq.length);
   const fallbackCenter = Math.floor(total / 2) || 0;
   const centers = (variantes || [])
@@ -113,7 +114,7 @@ const buildWindows = (refSeq, sampleSeq, variantes, windowRadius, maxWindows) =>
     return {
       id: `rna-${center}-${index}`,
       center,
-      tipo: variantes[index]?.tipo || "trecho",
+      tipo: variantes[index]?.tipo || fallbackBadge,
       columns,
     };
   });
@@ -146,19 +147,21 @@ const RNASequence = ({
   windowRadius = 6,
   maxWindows = 3,
 }) => {
+  const { t } = useTranslation();
   const refRna = useMemo(() => dnaToRna(refSeq), [refSeq]);
   const sampleRna = useMemo(() => dnaToRna(querySeq), [querySeq]);
+  const fallbackBadge = t("reportDetail.transcription.defaultBadge");
 
   const windows = useMemo(
-    () => buildWindows(refRna, sampleRna, variantes, windowRadius, maxWindows),
-    [refRna, sampleRna, variantes, windowRadius, maxWindows]
+    () => buildWindows(refRna, sampleRna, variantes, windowRadius, maxWindows, fallbackBadge),
+    [refRna, sampleRna, variantes, windowRadius, maxWindows, fallbackBadge]
   );
 
   return (
     <div className="rna-sequence">
       <div className="rna-head">
-        <h3>Transcrição em destaque</h3>
-        <p>Janelas equivalentes ao alinhamento, focadas nas mutações.</p>
+        <h3>{t("reportDetail.transcription.windowTitle")}</h3>
+        <p>{t("reportDetail.transcription.windowSubtitle")}</p>
       </div>
       <div className="rna-windows">
         {windows.map((window) => {
@@ -188,7 +191,11 @@ const RNASequence = ({
                     key={`${window.id}-codon-${codon.codonIndex}`}
                     className={`codon-badge ${codon.differs ? "diff" : ""}`}
                   >
-                    Codon {codon.codonIndex + 1}: {codon.refCodon || "---"} → {codon.sampleCodon || "---"}
+                    {t("reportDetail.transcription.codon", {
+                      index: codon.codonIndex + 1,
+                      ref: codon.refCodon || "---",
+                      sample: codon.sampleCodon || "---",
+                    })}
                     <strong>{codon.refAa || "?"}</strong>
                   </span>
                 ))}

@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Sidebar from "../../Components/Sidebar";
 import axios from "../../api";
 
 const CriarCliente = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // Estado para armazenar os dados do formulário
   const [formData, setFormData] = useState({
@@ -28,11 +30,11 @@ const CriarCliente = () => {
   const handleSubmit = async () => {
     try {
       const response = await axios.post("/vet/cadastro", formData);
-      alert(response.data.message); // Exibe mensagem de sucesso
+      alert(response.data.message || t("createClient.success")); // Exibe mensagem de sucesso
       navigate("/"); // Redireciona após o cadastro
     } catch (err) {
       console.error("Erro ao cadastrar veterinário:", err);
-      alert("Ocorreu um erro ao cadastrar o veterinário.");
+      alert(t("createClient.error"));
     }
   };
 
@@ -114,60 +116,60 @@ const CriarCliente = () => {
   return (
     <div style={containerStyle}>
       <Sidebar />
-      <h2>Cadastrar Cliente</h2>
+      <h2>{t("createClient.title")}</h2>
       <form style={formStyle}>
         <div style={columnStyle}>
-          <label style={labelStyle}>Nome da Empresa</label>
+          <label style={labelStyle}>{t("createClient.fields.company")}</label>
           <input
             className="inputs"
             type="text"
             name="Nome"
-            placeholder="Digite o nome da Empresa"
+            placeholder={t("createClient.placeholders.company")}
             value={formData.Nome}
             onChange={handleChange}
             style={inputStyle}
           />
 
-          <label style={labelStyle}>Telefone</label>
+          <label style={labelStyle}>{t("createClient.fields.phone")}</label>
           <input
             className="inputs"
             type="text"
             name="Telefone"
-            placeholder="Digite o telefone"
+            placeholder={t("createClient.placeholders.phone")}
             value={formData.Telefone}
             onChange={handleChange}
             style={inputStyle}
           />
 
-          <label style={labelStyle}>E-mail</label>
+          <label style={labelStyle}>{t("createClient.fields.email")}</label>
           <input
             className="inputs"
             type="email"
             name="Email"
-            placeholder="Digite o e-mail"
+            placeholder={t("createClient.placeholders.email")}
             value={formData.Email}
             onChange={handleChange}
             style={inputStyle}
           />
         </div>
         <div style={columnStyle}>
-          <label style={labelStyle}>Endereço</label>
+          <label style={labelStyle}>{t("createClient.fields.address")}</label>
           <input
             className="inputs"
             type="text"
             name="Endereco"
-            placeholder="Digite o endereço"
+            placeholder={t("createClient.placeholders.address")}
             value={formData.Endereco}
             onChange={handleChange}
             style={inputStyle}
           />
 
-          <label style={labelStyle}>Observação</label>
+          <label style={labelStyle}>{t("createClient.fields.notes")}</label>
           <textarea
             style={textAreaStyle}
             className="inputs"
             name="Observacoes"
-            placeholder="Digite uma observação"
+            placeholder={t("createClient.placeholders.notes")}
             value={formData.Observacoes}
             onChange={handleChange}
           />
@@ -175,10 +177,10 @@ const CriarCliente = () => {
       </form>
       <div style={buttonContainerStyle}>
         <button style={backButtonStyle} onClick={() => navigate("/")}>
-          Voltar
+          {t("createClient.buttons.back")}
         </button>
         <button style={nextButtonStyle} onClick={handleSubmit}>
-          Finalizar Cadastro →
+          {t("createClient.buttons.submit")}
         </button>
       </div>
     </div>

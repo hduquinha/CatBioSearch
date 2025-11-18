@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import axios from "../../api";
 import logoimage from "../../Components/assets/logo.svg";
 import "../login/login.css";
@@ -12,6 +13,7 @@ function Login() {
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const { t } = useTranslation();
 
   const togglePasswordVisibility = () => {
     setPasswordVisible(!passwordVisible);
@@ -35,9 +37,9 @@ function Login() {
     } catch (error) {
       // Tratar erros de requisição
       if (error.response) {
-        setErrorMessage(error.response.data.message || "Erro no login.");
+        setErrorMessage(error.response.data.message || t('login.error'));
       } else {
-        setErrorMessage("Erro ao conectar com o servidor.");
+        setErrorMessage(t('login.serverError'));
       }
     }
   };
@@ -54,13 +56,13 @@ function Login() {
 
                 <div className="inputs-content">
                   <div className="login-title">
-                    <h2>Login</h2>
+                    <h2>{t('login.title')}</h2>
                   </div>
 
                   <div className="input-wrapper">
                     <input className="text-input"
                       type="text"
-                      placeholder="Usuário"
+                      placeholder={t('login.usernamePlaceholder')}
                       value={login}
                       onChange={(e) => setLogin(e.target.value)}
                       required
@@ -72,7 +74,7 @@ function Login() {
                   <div className="password-wrapper">
                     <input
                       type={passwordVisible ? "text" : "password"}
-                      placeholder="Digite sua senha"
+                      placeholder={t('login.passwordPlaceholder')}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
@@ -86,7 +88,7 @@ function Login() {
                   </div>
                   <div className="button-signIn">
                     <button type="submit" className="button-style">
-                      Entrar
+                        {t('buttons.enter')}
                     </button>
                   </div>
                 </div>

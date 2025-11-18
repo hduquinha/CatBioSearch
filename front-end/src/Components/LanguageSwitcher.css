@@ -1,0 +1,21 @@
+.language-switcher {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  border: none;
+  background: #18181b;
+  color: #ffffff;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  z-index: 999;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.language-switcher:hover {
+  transform: translateY(-1px);
+  background: #0f172a;
+}

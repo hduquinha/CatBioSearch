@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import api from '../../api';
 import Sidebar from "../../Components/Sidebar";
 import './home.css';
@@ -12,6 +13,7 @@ import ReportsChart from "./Componentes_Home/grafic.jsx";
 
 function HomePage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const [ultimosRelatorios, setUltimosRelatorios] = useState([]);
   const [totalRelatorios, setTotalRelatorios] = useState(null); // Alterado para null
@@ -49,13 +51,13 @@ function HomePage() {
       <div className="header">
         <div className="header-card">
           <div className="content-text">
-            <h2 style={{ color: "#FFC100", fontWeight: "700", fontSize: 40 }}>Novidades do Software!</h2>
-            <p style={{ color: "#FFFFFF", fontSize: 16 }}>Fique por dentro das inovações da biomedicina.</p>
+            <h2 style={{ color: "#FFC100", fontWeight: "700", fontSize: 40 }}>{t('home.newsTitle')}</h2>
+            <p style={{ color: "#FFFFFF", fontSize: 16 }}>{t('home.newsSubtitle')}</p>
             <a
               href="#"
               style={{ color: "#FFFFFF", fontWeight: 800, marginTop: "20px", display: "inline-block" }}
             >
-              Ver mais
+              {t('buttons.seeMore')}
             </a>
           </div>
           <div className="img-card">
@@ -65,7 +67,7 @@ function HomePage() {
 
         <div className="header-metrics">
           <div className="metric-card-growth">
-            <p>Uso do Software</p>
+            <p>{t('home.softwareUse')}</p>
             <div className="img-crescimento">
               <img src={software} alt="" />
             </div>
@@ -84,21 +86,21 @@ function HomePage() {
           className="iniciar-btn"
           onClick={() => navigate("/passosAnalise/step1")}
         >
-          + Iniciar Análise
+          {t('buttons.startAnalysis')}
         </button>
         <button
           className="home-btn"
           onClick={() => navigate("/relatorio")}
         >
           <LuHistory style={{ marginRight: 5 }} />
-          Histórico de Análises
+          {t('buttons.analysisHistory')}
         </button>
         <button
           className="home-btn"
           onClick={() => navigate("/criarcliente")}
         >
           <RiPencilLine style={{ marginRight: 5 }} />
-          Cadastrar Cliente
+          {t('buttons.registerClient')}
         </button>
       </div>
 
@@ -108,9 +110,9 @@ function HomePage() {
         </div>
 
         <div className="recent-analyses">
-  <h3 className="recent-analyses-title">Últimos Relatórios</h3>
+  <h3 className="recent-analyses-title">{t('home.recentReports')}</h3>
   {loading ? (
-    <p className="recent-analyses-loading">Carregando...</p>
+    <p className="recent-analyses-loading">{t('common.loading')}</p>
   ) : (
     <ul className="recent-analyses-list">
       {ultimosRelatorios.length > 0 ? (
@@ -121,15 +123,15 @@ function HomePage() {
             </div>
             <a className='aa' href='/'>
               <div className="recent-analyses-content">
-              <p><strong>Clínica:</strong> {relatorio.Cliente}</p>
-              <p><strong>Nome do Gato:</strong> {relatorio.Nome}</p>
-              <p><strong>ID:</strong> {relatorio.id}</p>
+              <p><strong>{t('home.clinic')}:</strong> {relatorio.Cliente}</p>
+              <p><strong>{t('home.catName')}:</strong> {relatorio.Nome}</p>
+              <p><strong>{t('home.reportId')}:</strong> {relatorio.id}</p>
             </div>
             </a>
           </li>
         ))
       ) : (
-        <p className="recent-analyses-empty">Nenhum relatório encontrado.</p>
+        <p className="recent-analyses-empty">{t('home.noReports')}</p>
       )}
     </ul>
   )}

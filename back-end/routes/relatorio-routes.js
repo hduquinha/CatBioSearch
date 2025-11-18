@@ -33,6 +33,21 @@ const autenticacao = (req, res, next) => {
     }
 };
 
+const normalizeInteger = (value) => {
+    if (value === undefined || value === null) {
+        return null;
+    }
+    if (typeof value === 'number' && Number.isFinite(value)) {
+        return Math.trunc(value);
+    }
+    const asString = String(value).trim();
+    if (asString === '') {
+        return null;
+    }
+    const parsed = Number.parseInt(asString, 10);
+    return Number.isNaN(parsed) ? null : parsed;
+};
+
 // Rota para criar novo relatório
 router.post('/novo-relatorio', autenticacao, async (req, res) => {
     const { Nome, Sexo, Cliente, Idade, Raca, Material, Metodo } = req.body;
@@ -42,7 +57,7 @@ router.post('/novo-relatorio', autenticacao, async (req, res) => {
             Nome,
             Sexo,
             Cliente,
-            Idade,
+            Idade: normalizeInteger(Idade),
             Raca,
             Material,
             Metodo,
@@ -126,7 +141,7 @@ router.put('/relatorio/:id', autenticacao, async (req, res) => {
             Nome,
             Sexo,
             Cliente,
-            Idade
+            Idade: normalizeInteger(Idade)
     
         });
 
