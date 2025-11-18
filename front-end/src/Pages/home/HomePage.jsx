@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
-import axios from 'axios';
+import api from '../../api';
 import Sidebar from "../../Components/Sidebar";
 import './home.css';
 import figure from '../../Components/assets/figure-home.svg';
@@ -19,7 +19,7 @@ function HomePage() {
 
   const fetchData = async () => {
     try {
-      const response = await axios.get('/home/menu');
+      const response = await api.get('/home/menu');
       console.log("Dados recebidos do backend:", response.data); // Inspecione os dados recebidos
       setUltimosRelatorios(response.data.relatorios || []);
       setTotalRelatorios(response.data.totalRelatorios ?? null); // Se não for fornecido, permanece null
