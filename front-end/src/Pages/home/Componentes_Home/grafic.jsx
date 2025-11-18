@@ -115,7 +115,7 @@ const ReportsChart = () => {
   return (
     <div
       ref={ref}
-      style={{ width: '100%', maxWidth: '60rem', margin: '0 auto', padding: '20px', backgroundColor: '#f4f4f4', borderRadius: '12px' }}
+      style={{ width: '100%', maxWidth: '70rem', margin: '0 auto', padding: '20px', backgroundColor: '#f4f4f4', borderRadius: '12px' }}
     >
       <h3 style={{ textAlign: 'center', marginBottom: '20px', color: '#6F6F6F' }}>Relatórios gerados por mês</h3>
       <Bar data={data} options={options} />
