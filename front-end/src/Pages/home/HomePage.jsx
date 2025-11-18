@@ -26,6 +26,13 @@ function HomePage() {
       setLoading(false);
       console.log(`${totalRelatorios}`)
     } catch (error) {
+      // Se não autenticado, redireciona para tela de login
+      if (error.response && error.response.status === 401) {
+        console.warn('Usuário não autenticado — redirecionando para login.');
+        setLoading(false);
+        navigate('/login');
+        return;
+      }
       console.error('Erro ao buscar dados:', error);
       setLoading(false);
     }
