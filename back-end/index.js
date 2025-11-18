@@ -34,6 +34,11 @@ app.use(session({
 // Middleware para interpretar JSON no corpo da requisição
 app.use(express.json());
 
+// Rota de saúde para readiness/liveness
+app.get('/health', (req, res) => {
+    res.json({ status: 'ok' });
+});
+
 // Middleware para as rotas
 app.use('/home', menuRoutes);
 app.use('/users', userRoutes);
@@ -42,6 +47,30 @@ app.use('/vet', vetRoutes)
 // Pasta estática
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Garante usuário admin padrão de forma idempotente
+async function ensureAdminUser(User) {
+    try {
+        const [admin, created] = await User.findOrCreate({
+            where: { Login: 'admin' },
+            defaults: {
+                Nome: 'Administrador',
+                Password: 'admin',
+                CPF: '00000000000',
+                Nascimento: '2000-01-01',
+                CRBM: '0000',
+                Admin: true
+            }
+        });
+        if (created) {
+            console.log('[BOOT] Usuário admin criado automaticamente.');
+        } else {
+            console.log('[BOOT] Usuário admin já existe.');
+        }
+    } catch (e) {
+        console.error('[BOOT] Falha ao garantir usuário admin:', e.message);
+    }
+}
+
 // Função para conectar ao MySQL e inicializar o modelo
 const connectMysqlAndInitModels = async () => {
     try {
@@ -49,8 +78,9 @@ const connectMysqlAndInitModels = async () => {
         await db.authenticate();     // Autentica a conexão
         console.log("MySQL conectado");
 
-        await initUserModel();  // Inicializa e sincroniza o modelo User
+        const User = await initUserModel();  // Inicializa e sincroniza o modelo User
         console.log("Modelo User sincronizado com sucesso!");
+        await ensureAdminUser(User);
 
         return db;
     } catch (err) {

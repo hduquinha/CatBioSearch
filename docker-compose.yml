@@ -16,10 +16,16 @@ services:
       db:
         condition: service_healthy
     environment:
-      DB_HOST: db  
+      DB_HOST: db
+      DB_PORT: 3306
       DB_USER: root
       DB_PASSWORD: root
       DB_NAME: catsearch
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
 
   back-end-fasta:
     build: ./back-end-fasta
@@ -30,7 +36,7 @@ services:
     environment:
       IA_HOST: ia
       ENABLE_LLM: "true"  # altere para "true" para ativar geração de resumo LLM
-      GEMINI_API_KEY: "AIzaSyA1tPnnYcIE4vUanxb2qUxO5bhIzflyHcA"   # defina sua chave real aqui ou via variável externa
+      GEMINI_API_KEY: "${GEMINI_API_KEY}"   # defina via arquivo .env na raiz (não comitar)
 
   ia:
     build: ./ia

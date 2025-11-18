@@ -289,7 +289,7 @@ def resumo_analise():
         return jsonify({"error": "Nenhuma análise foi realizada ainda"}), 404
     texto = ultimo_resultado_analise.get("relatorio_texto")
     if not texto:
-        return jsonify({"status": "pendente"})
+        return jsonify({"status": "pendente", "hint": "Execute /buscar-pkd1 primeiro"})
     return jsonify({"relatorio_texto": texto})
 
 if __name__ == '__main__':

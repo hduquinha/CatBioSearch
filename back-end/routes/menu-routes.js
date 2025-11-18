@@ -8,6 +8,18 @@ const initializeRelatorioModel = async () => {
     Relatorio = await initRelatorioModel();
 };
 
+// Garante que o modelo esteja pronto antes de atender a rota
+const ensureRelatorioReady = async (req, res, next) => {
+    try {
+        if (!Relatorio) {
+            await initializeRelatorioModel();
+        }
+        return next();
+    } catch (e) {
+        return next(e);
+    }
+};
+
 const autenticacao = (req, res, next) => {
     if (req.session.user) {
         return next();
@@ -16,7 +28,7 @@ const autenticacao = (req, res, next) => {
     }
 };
 
-router.get("/menu", autenticacao, async (req, res) => {
+router.get("/menu", autenticacao, ensureRelatorioReady, async (req, res) => {
     console.log("Requisição recebida no endpoint /menu");
     try {
         const relatorios = await Relatorio.findAll({
@@ -41,7 +53,7 @@ router.get("/menu", autenticacao, async (req, res) => {
 });
 
 
-// Inicializa os modelos ao carregar o roteador
+// Inicializa os modelos ao carregar o roteador (best-effort)
 initializeRelatorioModel();
 
 module.exports = router;
